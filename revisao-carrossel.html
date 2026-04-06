@@ -190,7 +190,7 @@ function getImageThumb(slideNum) {
   return null;
 }
 
-function renderPreview(s, headline, body) {
+function renderPreview(s, headline, body, pretitle, cta) {
   var isGrad = s.overlay === "gradientBrand";
   var isTop = s.overlay === "top";
   var isLeft = s.overlay === "left";
@@ -240,8 +240,8 @@ function renderPreview(s, headline, body) {
   }
 
   var ctaHTML = "";
-  if (s.cta) {
-    ctaHTML = '<div class="preview-cta-btn" style="background:#fff;color:' + (pal.primary || "#FA5701") + ';font-family:\'' + (typo.headingFont || "sans-serif") + '\'">' + esc(s.cta) + '</div>';
+  if (cta) {
+    ctaHTML = '<div class="preview-cta-btn" style="background:#fff;color:' + (pal.primary || "#FA5701") + ';font-family:\'' + (typo.headingFont || "sans-serif") + '\'">' + esc(cta) + '</div>';
   }
 
   var swipeHTML = "";
@@ -255,8 +255,8 @@ function renderPreview(s, headline, body) {
   h += '<div class="preview-content" style="justify-content:' + justify + ';align-items:' + align + ';text-align:' + textAlign + ';padding:' + pad + '">';
   h += '<div style="width:' + textWidth + '">';
   h += logoHTML;
-  if (s.pretitle) {
-    h += '<div class="preview-pretitle" style="font-family:\'' + (typo.bodyFont || "sans-serif") + '\';color:' + (pal.primary || "#FA5701") + '">' + esc(s.pretitle) + '</div>';
+  if (pretitle) {
+    h += '<div class="preview-pretitle" style="font-family:\'' + (typo.bodyFont || "sans-serif") + '\';color:' + (pal.primary || "#FA5701") + '">' + esc(pretitle) + '</div>';
   }
   h += '<div class="preview-headline" style="font-family:\'' + (typo.headingFont || "sans-serif") + '\';font-size:' + hSize + ';color:' + (pal.textLight || "#fff") + '">' + titleHTML + '</div>';
   if (bodyHTML) {
@@ -283,19 +283,23 @@ function render() {
 
     // Left: preview
     h += '<div class="slide-left" id="prev-' + s.num + '">';
-    h += renderPreview(s, s.headline, s.body);
+    h += renderPreview(s, s.headline, s.body, s.pretitle, s.cta);
     h += '</div>';
 
     // Right: controls
     h += '<div class="slide-right">';
 
-    // Headline
-    h += '<div class="fld"><label>Headline</label>';
+    // All text fields
+    h += '<div class="fld">';
+    h += '<label>Pré-título</label>';
+    h += '<input class="ep" data-s="' + s.num + '" value="' + esc(s.pretitle || "") + '" placeholder="Opcional...">';
+    h += '<label>Headline</label>';
     h += '<textarea class="eh" data-s="' + s.num + '" rows="3">' + esc(s.headline || "") + '</textarea>';
-
-    // Body
     h += '<label>Body</label>';
-    h += '<textarea class="eb" data-s="' + s.num + '" rows="2">' + esc(s.body || "") + '</textarea></div>';
+    h += '<textarea class="eb" data-s="' + s.num + '" rows="2">' + esc(s.body || "") + '</textarea>';
+    h += '<label>CTA</label>';
+    h += '<input class="ec" data-s="' + s.num + '" value="' + esc(s.cta || "") + '" placeholder="Texto do botão CTA...">';
+    h += '</div>';
 
     // Overlay type + intensity
     h += '<div class="fld"><label>Overlay</label>';
@@ -349,16 +353,18 @@ function render() {
 
   document.getElementById("app").innerHTML = h;
 
-  // Bind text inputs → live preview update
-  document.querySelectorAll(".eh, .eb").forEach(function(el) {
+  // Texto → live preview
+  document.querySelectorAll(".eh, .eb, .ep, .ec").forEach(function(el) {
     el.addEventListener("input", function() {
       var sn = parseInt(this.dataset.s);
       var s = S.find(function(x) { return x.num === sn });
       if (!s) return;
       var hi = document.querySelector('.eh[data-s="' + sn + '"]');
       var bi = document.querySelector('.eb[data-s="' + sn + '"]');
+      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
+      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
       var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body);
+      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta);
     });
   });
 
@@ -388,8 +394,10 @@ function render() {
       // Update preview
       var hi = document.querySelector('.eh[data-s="' + sn + '"]');
       var bi = document.querySelector('.eb[data-s="' + sn + '"]');
+      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
+      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
       var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body);
+      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta);
     });
   });
 
@@ -514,13 +522,16 @@ document.getElementById("cbtn").addEventListener("click", function() {
   S.forEach(function(s) {
     var hi = document.querySelector('.eh[data-s="' + s.num + '"]');
     var bi = document.querySelector('.eb[data-s="' + s.num + '"]');
+    var pi = document.querySelector('.ep[data-s="' + s.num + '"]');
+    var ci = document.querySelector('.ec[data-s="' + s.num + '"]');
     l.push("Slide " + s.num + " [" + s.type + "]");
+    if (pi && pi.value) l.push("  Pretitle: " + pi.value);
     l.push("  Headline: " + (hi ? hi.value : s.headline));
     l.push("  Body: " + (bi ? bi.value : s.body));
     l.push("  Overlay: " + (s.overlay || "bottom") + (s.overlay !== "gradientBrand" ? " (" + (s.overlayIntensity || 72) + "%)" : ""));
-    if (s.pretitle) l.push("  Pretitle: " + s.pretitle);
     if (s.showLogo) l.push("  Logo: sim");
-    if (s.cta) l.push("  CTA: " + s.cta);
+    if (ci && ci.value) l.push("  CTA: " + ci.value);
+    else if (s.cta) l.push("  CTA: " + s.cta);
     if (sel[s.num]) {
       var img = getImageThumb(s.num);
       l.push("  Imagem: " + (img ? img.name : "?") + " | " + sel[s.num]);
