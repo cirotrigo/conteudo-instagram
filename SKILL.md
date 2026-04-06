@@ -52,7 +52,8 @@ O sistema usa **cache local** para brand assets que raramente mudam. Isso evita 
 ~/.claude/skills/conteudo-instagram/
 ├── SKILL.md                           (este arquivo)
 ├── curadoria-template.html            (template de curadoria — nao modificar)
-├── revisao-template.html              (template de revisao interativa — nao modificar)
+├── revisao-carrossel.html             (template de revisao para carrossel 4:5 — nao modificar)
+├── revisao-story.html                 (template de revisao para story 9:16 — nao modificar)
 ├── design-system-template.html        (template base para design systems)
 └── projects/                          (cache por projeto)
     └── {id}-{slug}/
@@ -527,13 +528,15 @@ CTA area (opcional — tipo PROMO ou CTA):
 
 Antes de exportar, gere uma **pagina HTML de revisao** servida via localhost.
 
-**Template:** `revisao-template.html`
+**Template por formato:**
+- Carrossel: `revisao-carrossel.html` — preview 270×337px, progress bar, seta de swipe
+- Story: `revisao-story.html` — preview 202×360px, zona segura, barra CTA
 
 **Arquivos necessarios** (3 JS + template):
 
 ```
 /tmp/carousel-{slug}/   ou   /tmp/story-{slug}/
-  ├── index.html        ← copia do revisao-template.html
+  ├── index.html        ← copia do revisao-carrossel.html ou revisao-story.html
   ├── gallery.js        ← G[], FC{} (catalogo Drive do projeto)
   ├── slides.js         ← S[], META{} (slides com imagens ja selecionadas)
   └── design.js         ← DS{} (tokens do design system + fontes base64)
