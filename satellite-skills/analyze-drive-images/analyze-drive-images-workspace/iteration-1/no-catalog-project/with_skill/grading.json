@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "run_type": "with_skill",
+  "expectations": [
+    {"text": "setup-project-loaded", "passed": true, "evidence": "Identified Espeto Gaucho as project ID 6"},
+    {"text": "catalog-check-attempted", "passed": true, "evidence": "search-catalog returned error indicating no catalog exists"},
+    {"text": "no-catalog-handled-gracefully", "passed": true, "evidence": "Recognized absence and offered both: script generation AND direct visual analysis via thumbnails"},
+    {"text": "script-instructions-correct", "passed": true, "evidence": "Recommended: npx tsx scripts/analyze-drive-images.ts --project-id 6"}
+  ]
+}

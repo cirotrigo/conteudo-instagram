@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "skill_name": "create-copy",
+    "skill_path": "/Users/cirotrigo/.claude/skills/create-copy",
+    "executor_model": "claude-opus-4-6",
+    "analyzer_model": "claude-opus-4-6",
+    "timestamp": "2026-04-02T23:00:00Z",
+    "evals_run": [1, 2, 3],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1, "eval_name": "Happy Hour Weekly (15 stories)", "configuration": "with_skill", "run_number": 1,
+      "result": { "pass_rate": 1.0, "passed": 6, "failed": 0, "total": 6, "time_seconds": 105.3, "tokens": 29896, "tool_calls": 7, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded-tom-de-voz", "passed": true, "evidence": "Loaded TOM_DE_VOZ and CARDAPIO, summarized tone at top of output"},
+        {"text": "correct-quantity", "passed": true, "evidence": "15 stories in table (5 days x 3 stories)"},
+        {"text": "slot-values-format", "passed": true, "evidence": "All 15 stories have Pre-titulo, Titulo, Subtitulo, Rodape-1, CTA, Badge fields + JSON blocks"},
+        {"text": "day-adaptation", "passed": true, "evidence": "Monday='comece a semana', Tuesday='terca no rock', Wednesday='quarta on fire', Thursday='amanha e sexta', Friday='sextou'"},
+        {"text": "headline-variety", "passed": true, "evidence": "Alternates between petiscos, bebidas, burgers, chapas — no consecutive repeats"},
+        {"text": "captions-with-hashtags", "passed": true, "evidence": "Each story has caption with emojis and 4-5 relevant hashtags"}
+      ],
+      "notes": ["Complete table + slotValues JSON for all 15 stories, ready for /create-template-pages"]
+    },
+    {
+      "eval_id": 1, "eval_name": "Happy Hour Weekly (15 stories)", "configuration": "without_skill", "run_number": 1,
+      "result": { "pass_rate": 0.5, "passed": 3, "failed": 3, "total": 6, "time_seconds": 67.7, "tokens": 25293, "tool_calls": 5, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded-tom-de-voz", "passed": true, "evidence": "Referenced HH items from menu, tone described"},
+        {"text": "correct-quantity", "passed": true, "evidence": "15 stories (5 days x 3)"},
+        {"text": "slot-values-format", "passed": false, "evidence": "Free-form text blocks, NOT structured template fields. No Pre-titulo/Titulo/Subtitulo separation, no slotValues JSON."},
+        {"text": "day-adaptation", "passed": true, "evidence": "Different energy per day with varied items"},
+        {"text": "headline-variety", "passed": false, "evidence": "Good variety but not in template field format"},
+        {"text": "captions-with-hashtags", "passed": false, "evidence": "No separate Instagram captions — text is a single block per story without caption field"}
+      ],
+      "notes": ["Good copy quality but entirely free-form — would require manual reformatting for template use"]
+    },
+    {
+      "eval_id": 2, "eval_name": "Almoco with Images (6 stories)", "configuration": "with_skill", "run_number": 1,
+      "result": { "pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 97.5, "tokens": 33253, "tool_calls": 10, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded", "passed": true, "evidence": "Loaded Espeto Gaucho KB: tom de voz gaucho, cardapio completo"},
+        {"text": "image-context-used", "passed": true, "evidence": "Stories directly tied to photos: picanha->Titulo PICANHA NA BRASA, peixe->PEIXE GRELHADO, area kids->ALMOCO EM FAMILIA"},
+        {"text": "correct-quantity", "passed": true, "evidence": "6 stories in table (2 days x 3)"},
+        {"text": "day-differentiation", "passed": true, "evidence": "Quarta='ja e quarta!', Quinta='amanha e sexta!' — different pre-titulos and energy"}
+      ],
+      "notes": ["slotValues JSON for all 6 stories + captions with gaucho expressions (tche, bah)"]
+    },
+    {
+      "eval_id": 2, "eval_name": "Almoco with Images (6 stories)", "configuration": "without_skill", "run_number": 1,
+      "result": { "pass_rate": 0.5, "passed": 2, "failed": 2, "total": 4, "time_seconds": 58.8, "tokens": 27836, "tool_calls": 6, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded", "passed": true, "evidence": "Loaded KB with gaucho tone"},
+        {"text": "image-context-used", "passed": true, "evidence": "Stories matched to photos: picanha, peixe, area kids"},
+        {"text": "correct-quantity", "passed": false, "evidence": "6 stories present but in free-form text, not structured template fields or slotValues"},
+        {"text": "day-differentiation", "passed": false, "evidence": "Quarta and Quinta have slightly different tone but no clear Pre-titulo/energy differentiation in template format"}
+      ],
+      "notes": ["Good copy, gaucho tone, but single-column text format — no template field separation"]
+    },
+    {
+      "eval_id": 3, "eval_name": "Single Desejo Copy", "configuration": "with_skill", "run_number": 1,
+      "result": { "pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 48.8, "tokens": 25976, "tool_calls": 7, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded", "passed": true, "evidence": "Loaded By Rock KB, identified Smash Sample Burger in menu"},
+        {"text": "smash-burger-focused", "passed": true, "evidence": "Titulo: SMASH BURGER, Subtitulo references carne prensada, cheddar, bacon"},
+        {"text": "desejo-tone", "passed": true, "evidence": "Caption uses sensory language: 'cheiro de carne prensada', 'crostinha', 'cheddar escorrendo'. Sunday tone: 'sem culpa, no volume maximo'"},
+        {"text": "complete-output", "passed": true, "evidence": "Table + slotValues JSON + caption with emojis and hashtags + delivery info"}
+      ],
+      "notes": ["Clean, focused output with sensory desejo language"]
+    },
+    {
+      "eval_id": 3, "eval_name": "Single Desejo Copy", "configuration": "without_skill", "run_number": 1,
+      "result": { "pass_rate": 0.75, "passed": 3, "failed": 1, "total": 4, "time_seconds": 48.4, "tokens": 26220, "tool_calls": 8, "errors": 0 },
+      "expectations": [
+        {"text": "kb-loaded", "passed": true, "evidence": "Loaded KB, found Smash Sample Burger, even searched catalog for matching images"},
+        {"text": "smash-burger-focused", "passed": true, "evidence": "Focused on Smash — crostinha dourada, cheddar, pao brioche na manteiga"},
+        {"text": "desejo-tone", "passed": true, "evidence": "Good sensory copy: 'isso nao e burger, e vicio'. Two versions offered."},
+        {"text": "complete-output", "passed": false, "evidence": "No slotValues JSON format. Free-form text + alternative version. Would need reformatting."}
+      ],
+      "notes": ["Offered 2 creative versions + image suggestion from catalog — added value, but no template format"]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0},
+      "time_seconds": {"mean": 83.9, "stddev": 25.2, "min": 48.8, "max": 105.3},
+      "tokens": {"mean": 29708, "stddev": 2974, "min": 25976, "max": 33253}
+    },
+    "without_skill": {
+      "pass_rate": {"mean": 0.58, "stddev": 0.12, "min": 0.50, "max": 0.75},
+      "time_seconds": {"mean": 58.3, "stddev": 7.9, "min": 48.4, "max": 67.7},
+      "tokens": {"mean": 26450, "stddev": 1031, "min": 25293, "max": 27836}
+    },
+    "delta": {
+      "pass_rate": "+0.42",
+      "time_seconds": "+25.6",
+      "tokens": "+3258"
+    }
+  },
+  "notes": [
+    "kb-loaded passes 100% in both configs — non-discriminating",
+    "The critical differentiator is OUTPUT FORMAT: skill produces structured slotValues JSON ready for template integration, baseline produces free-form text",
+    "Copy QUALITY is comparable — both produce good, on-brand text. The skill's value is in STRUCTURE, not creativity",
+    "Baseline eval 3 added value the skill missed: suggested matching images from catalog + offered alternative version",
+    "Skill overhead is modest: +26s avg, +3.3k tokens — reasonable for the structure it adds"
+  ]
+}

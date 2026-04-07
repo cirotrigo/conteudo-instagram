@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "run_type": "with_skill",
+  "expectations": [
+    {"text": "setup-project-loaded", "passed": true, "evidence": "Called list-projects and identified By Rock as project ID 7"},
+    {"text": "knowledge-base-loaded", "passed": true, "evidence": "Called get-knowledge(projectId: 7, category: CARDAPIO) and retrieved full menu with HH items"},
+    {"text": "catalog-searched-with-filters", "passed": true, "evidence": "Made 4 catalog searches with varied filters: theme=happy-hour, menuCategory=BEBIDAS, menuCategory=AMBIENTE, tags=[cerveja,chopp,drink,bebida,bar]"},
+    {"text": "thumbnails-shown-base64", "passed": true, "evidence": "Called get-image-thumbnail x8 with asBase64=true for top candidates"},
+    {"text": "recommendations-justified", "passed": true, "evidence": "Each of 5 recommendations includes detailed justification plus suggested story sequence"}
+  ]
+}

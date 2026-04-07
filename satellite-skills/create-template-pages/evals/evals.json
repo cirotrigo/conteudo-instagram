@@ -1,0 +1,23 @@
+{
+  "skill_name": "create-template-pages",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Monte os criativos de happy hour do By Rock pra segunda-feira. Tenho 3 stories com as copies prontas: Story 1 (Pre-titulo: SEGUNDA NAO PRECISA, Titulo: SER UM BLUES, Subtitulo: Chopp gelado a partir das 16h), Story 2 (Pre-titulo: AQUELA BATATA, Titulo: QUE SALVA A SEGUNDA, Subtitulo: Rock Fries com cheddar e bacon), Story 3 (Pre-titulo: ONION RINGS, Titulo: NA CERVEJA PRETA, Subtitulo: Empanados no panko ultra crocantes). Imagens: 1y5rA2VxZ4H2LibIpvNdQkFMtz3DKFx0y, 1qWHye1LoN4muBKjERNXpDF1fGCbmsZU6, 1CQfcoO8u3Gxw6Xm5KvAH8GtEYnH9IjmW.",
+      "expected_output": "Deve carregar templates, selecionar pages adequadas alternando layouts, montar slotValues com textos + _driveImageId, criar 3 posts DRAFT com create-post, e verificar com list-posts.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Quero ver como fica o story do Smash Burger do By Rock antes de agendar. A copy e: Pre-titulo: AQUELA CROSTINHA, Titulo: QUE ESTALA NA PRIMEIRA MORDIDA, Subtitulo: Carne prensada na chapa cheddar derretendo. Imagem: 1dlmsU_d3m5BIpXOyi0JBydHn5zq2gf4Q.",
+      "expected_output": "Deve selecionar uma page de template, criar post DRAFT com slotValues, e chamar render-story para gerar preview visual. Mostrar URL da imagem renderizada.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Preciso criar um layout novo pro Espeto Gaucho baseado no template existente, mas com o texto do rodape diferente. Quero clonar a primeira page e mudar o Rodape-1 fixo para 'Av. Ranulpho, 111 - Jardim Camburi'.",
+      "expected_output": "Deve carregar layers da page base com get-template-pages(includeLayerDetails: true), copiar layers, modificar o Rodape-1 fixo, e criar nova page com create-page passando layers como JSON string.",
+      "files": []
+    }
+  ]
+}

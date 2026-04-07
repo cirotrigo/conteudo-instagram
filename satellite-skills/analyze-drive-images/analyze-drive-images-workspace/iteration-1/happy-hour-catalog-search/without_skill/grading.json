@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "run_type": "without_skill",
+  "expectations": [
+    {"text": "setup-project-loaded", "passed": true, "evidence": "Found By Rock as project ID 7"},
+    {"text": "knowledge-base-loaded", "passed": true, "evidence": "Retrieved happy hour context from knowledge base"},
+    {"text": "catalog-searched-with-filters", "passed": true, "evidence": "Searched catalog for happy-hour images, drinks, and atmosphere"},
+    {"text": "thumbnails-shown-base64", "passed": true, "evidence": "Visually verified 9 thumbnails"},
+    {"text": "recommendations-justified", "passed": false, "evidence": "Brief descriptions but lacks detailed justifications. No story sequence suggested."}
+  ]
+}

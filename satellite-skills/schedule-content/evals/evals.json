@@ -1,0 +1,23 @@
+{
+  "skill_name": "schedule-content",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Agenda os stories de happy hour do By Rock pra semana que vem (07 a 11 de abril). Tenho 15 posts como DRAFT. Quero 3 por dia, com horarios variados e organicos.",
+      "expected_output": "Deve listar os DRAFTs existentes, verificar conflitos com SCHEDULED, propor grade de horarios organicos (minutos variados), renderizar cada post, e agendar com update-post.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Renderiza o story do Smash Burger do By Rock e me mostra como ficou antes de agendar.",
+      "expected_output": "Deve encontrar o post DRAFT do Smash Burger, chamar render-story, e apresentar a URL da imagem renderizada para aprovacao.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Preciso reagendar os stories de quarta pro By Rock. Os 3 stories que estao pra 09/04 devem ir pra 10/04, mantendo os mesmos horarios.",
+      "expected_output": "Deve listar posts SCHEDULED de 09/04, identificar os 3, e chamar update-post com nova data 10/04 mantendo horarios.",
+      "files": []
+    }
+  ]
+}

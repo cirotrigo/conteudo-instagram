@@ -1,0 +1,32 @@
+{
+  "eval_id": 3,
+  "eval_name": "specific-folder-browse",
+  "prompt": "Quero ver as fotos da pasta de Marco do By Rock. Me mostra as melhores pra eu escolher umas pra criativo de almoco.",
+  "assertions": [
+    {
+      "name": "setup-project-loaded",
+      "description": "Identified By Rock project",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "drive-images-listed",
+      "description": "Called list-drive-images to navigate folders",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "folder-identified",
+      "description": "Identified and navigated to the March folder (or similar monthly folder)",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "thumbnails-shown-base64",
+      "description": "Showed base64 thumbnails of images from the selected folder",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "theme-aligned-recommendations",
+      "description": "Recommendations are aligned with the 'almoco' (lunch) theme",
+      "type": "output_quality"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "skill_name": "create-copy",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Crie as copies de happy hour pro By Rock, 3 stories por dia, de segunda a sexta. Quero textos variados que usem o cardapio de petiscos e bebidas do HH.",
+      "expected_output": "Deve carregar KB (TOM_DE_VOZ + CARDAPIO), gerar 15 conjuntos de slotValues (5 dias x 3 stories), adaptar energia por dia da semana, variar headlines entre produto/promo/vibe, gerar captions com emojis e hashtags, apresentar tabela completa.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Escreva os textos de almoco pro Espeto Gaucho pra quarta e quinta, 3 stories cada dia. As fotos escolhidas sao de picanha no espeto, peixe grelhado e area kids.",
+      "expected_output": "Deve carregar KB do Espeto Gaucho, adaptar textos ao contexto das imagens mencionadas, diferenciar energia quarta vs quinta, gerar 6 conjuntos de slotValues, captions contextualizadas.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Monta uma copy pro By Rock, story de desejo pra domingo, com o Smash Burger. Quero algo que de vontade de pedir.",
+      "expected_output": "Deve carregar KB do By Rock, focar no Smash Burger do cardapio, tom de desejo/indulgencia adequado a domingo, um conjunto de slotValues + caption apetitosa.",
+      "files": []
+    }
+  ]
+}

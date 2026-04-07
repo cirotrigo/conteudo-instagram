@@ -1,0 +1,23 @@
+{
+  "skill_name": "analyze-drive-images",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Preciso de fotos de happy hour pro By Rock, preferencialmente bebidas e ambiente. Quero umas 5 opcoes boas pra montar os stories da semana.",
+      "expected_output": "Deve fazer setup do projeto By Rock, buscar no catalogo com theme=happy-hour e menuCategory=BEBIDAS/AMBIENTE, mostrar thumbnails base64 das top 5, e explicar por que cada foto foi recomendada.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Analise as imagens do projeto Espeto Gaucho, quero ver o que tem de bom no acervo.",
+      "expected_output": "Deve fazer setup do projeto, tentar search-catalog, identificar que o catalogo nao existe, e instruir o usuario a rodar o script analyze-drive-images.ts com os parametros corretos. Opcionalmente oferecer analise visual direta como alternativa.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Quero ver as fotos da pasta de Marco do By Rock. Me mostra as melhores pra eu escolher umas pra criativo de almoco.",
+      "expected_output": "Deve listar imagens do Drive com subpastas, identificar a pasta de Marco, carregar thumbnails base64 das imagens dessa pasta, analisar visualmente e recomendar as melhores para o tema almoco com justificativa.",
+      "files": []
+    }
+  ]
+}

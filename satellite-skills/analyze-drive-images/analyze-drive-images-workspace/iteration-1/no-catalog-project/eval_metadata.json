@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "no-catalog-project",
+  "prompt": "Analise as imagens do projeto Espeto Gaucho, quero ver o que tem de bom no acervo.",
+  "assertions": [
+    {
+      "name": "setup-project-loaded",
+      "description": "Identified the correct project from list-projects",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "catalog-check-attempted",
+      "description": "Attempted search-catalog before proceeding to alternatives",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "no-catalog-handled-gracefully",
+      "description": "Recognized catalog absence and offered alternatives (script generation or direct visual analysis)",
+      "type": "output_quality"
+    },
+    {
+      "name": "script-instructions-correct",
+      "description": "Mentioned the correct script (analyze-drive-images.ts) with proper parameters (--project-id)",
+      "type": "output_quality"
+    }
+  ]
+}

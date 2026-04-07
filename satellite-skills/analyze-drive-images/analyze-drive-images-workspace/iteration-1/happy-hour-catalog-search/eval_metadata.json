@@ -1,0 +1,32 @@
+{
+  "eval_id": 1,
+  "eval_name": "happy-hour-catalog-search",
+  "prompt": "Preciso de fotos de happy hour pro By Rock, preferencialmente bebidas e ambiente. Quero umas 5 opcoes boas pra montar os stories da semana.",
+  "assertions": [
+    {
+      "name": "setup-project-loaded",
+      "description": "Called list-projects and identified By Rock project",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "knowledge-base-loaded",
+      "description": "Called get-knowledge to load project context (especially CARDAPIO)",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "catalog-searched-with-filters",
+      "description": "Called search-catalog with relevant filters (theme=happy-hour or menuCategory=BEBIDAS/AMBIENTE)",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "thumbnails-shown-base64",
+      "description": "Called get-image-thumbnail with asBase64=true for at least 3 images",
+      "type": "tool_call_check"
+    },
+    {
+      "name": "recommendations-justified",
+      "description": "Final output contains justification for each recommended image (not just a list)",
+      "type": "output_quality"
+    }
+  ]
+}

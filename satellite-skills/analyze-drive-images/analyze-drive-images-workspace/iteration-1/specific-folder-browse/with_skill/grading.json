@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "run_type": "with_skill",
+  "expectations": [
+    {"text": "setup-project-loaded", "passed": true, "evidence": "Identified By Rock as project ID 7"},
+    {"text": "drive-images-listed", "passed": true, "evidence": "Called list-drive-images to browse folder structure"},
+    {"text": "folder-identified", "passed": false, "evidence": "Noted no Marco folder exists but did NOT find March photos in Week 2026 subfolder. Fell back to catalog search."},
+    {"text": "thumbnails-shown-base64", "passed": true, "evidence": "Loaded and analyzed 13 thumbnails across 2 batches"},
+    {"text": "theme-aligned-recommendations", "passed": true, "evidence": "All 8 recommendations are lunch-appropriate dishes"}
+  ]
+}
