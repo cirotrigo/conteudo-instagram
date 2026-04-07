@@ -52,14 +52,16 @@ O sistema usa **cache local** para brand assets que raramente mudam. Isso evita 
 ~/.claude/skills/conteudo-instagram/
 ├── SKILL.md                           (este arquivo)
 ├── curadoria-template.html            (template de curadoria — nao modificar)
-├── revisao-carrossel.html             (template de revisao para carrossel 4:5 — nao modificar)
-├── revisao-story.html                 (template de revisao para story 9:16 — nao modificar)
+├── revisao-carrossel.html             (template BASE de revisao carrossel — generico)
+├── revisao-story.html                 (template BASE de revisao story — generico)
 ├── design-system-template.html        (template base para design systems)
 └── projects/                          (cache por projeto)
     └── {id}-{slug}/
         ├── brand.json                 (cores, logo base64, fontes, KB resumo)
         ├── design-system.html         (pagina visual para revisar no browser)
         ├── design-system.json         (tokens programaticos para a skill)
+        ├── revisao-carrossel.html     (revisao com design system DO PROJETO embutido)
+        ├── revisao-story.html         (revisao com design system DO PROJETO embutido)
         └── fonts/
             ├── heading.otf            (fonte de titulos)
             └── body.otf              (fonte de corpo)
@@ -102,6 +104,12 @@ Quando o projeto nao tem cache local:
 5. Gerar brand.json com dados cacheados
 6. Gerar design-system.json com palette derivada + typography + presets (carousel e story)
 7. Gerar design-system.html a partir do template (substituir placeholders)
+8. Gerar revisao-story.html e revisao-carrossel.html com design system embutido:
+   - Ler template BASE (revisao-story.html / revisao-carrossel.html da raiz da skill)
+   - Substituir <script src="design.js"></script> por <script>var DS={...}</script> inline
+   - O DS inline contem: palette, typography (com fontes base64), overlays, logo base64, projectName
+   - Salvar em projects/{id}-{slug}/revisao-story.html e revisao-carrossel.html
+   Isso elimina a necessidade de gerar design.js a cada execucao.
 ```
 
 ### 0.4 Formato do brand.json
@@ -528,43 +536,23 @@ CTA area (opcional — tipo PROMO ou CTA):
 
 Antes de exportar, gere uma **pagina HTML de revisao** servida via localhost.
 
-**Template por formato:**
-- Carrossel: `revisao-carrossel.html` — preview 270×337px, progress bar, seta de swipe
-- Story: `revisao-story.html` — preview 202×360px, zona segura, barra CTA
+**Pagina de revisao por projeto:**
 
-**Arquivos necessarios** (3 JS + template):
+Cada projeto tem suas paginas de revisao pre-geradas com o design system embutido (cores, fontes base64, logo base64). NAO precisa gerar design.js — ja esta inline no HTML.
+
+- Carrossel: `projects/{id}-{slug}/revisao-carrossel.html` — preview 270×337px
+- Story: `projects/{id}-{slug}/revisao-story.html` — preview 202×360px
+
+**Arquivos necessarios** (2 JS + pagina do projeto):
 
 ```
 /tmp/carousel-{slug}/   ou   /tmp/story-{slug}/
-  ├── index.html        ← copia do revisao-carrossel.html ou revisao-story.html
+  ├── index.html        ← copia de projects/{id}-{slug}/revisao-carrossel.html ou revisao-story.html
   ├── gallery.js        ← G[], FC{} (catalogo Drive do projeto)
-  ├── slides.js         ← S[], META{} (slides com imagens ja selecionadas)
-  └── design.js         ← DS{} (tokens do design system + fontes base64)
+  └── slides.js         ← S[], META{} (slides com imagens ja selecionadas)
 ```
 
-**Gerar design.js:**
-
-```javascript
-var DS = {
-  formato: "carrossel",   // ou "story"
-  palette: { primary, primaryLight, primaryDark, lightBg, darkBg, textLight, textDark },
-  typography: {
-    headingFont: "Nome da Fonte",
-    bodyFont: "Nome da Fonte",
-    headingB64: "data:font/opentype;base64,...",
-    bodyB64: "data:font/truetype;base64,..."
-  },
-  overlays: {
-    bottom: "linear-gradient(...)",
-    top: "...", left: "...", right: "...",
-    gradientBrand: "linear-gradient(165deg,...)"
-  },
-  logoB64: "data:image/png;base64,...",
-  projectName: "Nome do Projeto",
-  driveFolderName: "Nome da Pasta no Drive",
-  imagesFolderId: "googleDriveFolderId"
-};
-```
+NAO precisa de design.js — o DS esta embutido no HTML do projeto.
 
 **Gerar slides.js:**
 

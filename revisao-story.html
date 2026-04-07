@@ -31,10 +31,6 @@ h1{text-align:center;margin-bottom:6px;font-size:22px}
 .preview-body{line-height:1.3;opacity:.85;white-space:pre-line}
 .preview-cta-btn{display:inline-block;padding:4px 14px;border-radius:20px;font-size:7px;letter-spacing:.5px;margin-top:6px;align-self:center}
 
-/* CTA swipe-up bar (story only) */
-.preview-cta-area{position:absolute;bottom:0;left:0;right:0;height:38px;background:rgba(255,255,255,.13);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;gap:4px;z-index:3}
-.preview-cta-area svg{width:10px;height:10px;opacity:.8}
-.preview-cta-area span{font-size:6.5px;letter-spacing:.5px;opacity:.9}
 
 /* Safety zone guides */
 .preview-safe-top{position:absolute;top:15%;left:0;right:0;height:1px;background:rgba(255,255,0,.18);z-index:4;pointer-events:none}
@@ -47,6 +43,13 @@ h1{text-align:center;margin-bottom:6px;font-size:22px}
 .fld input,.fld textarea{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;color:#fff;padding:10px 12px;border-radius:6px;font-size:14px;outline:none;font-family:inherit}
 .fld textarea{resize:vertical;min-height:60px;line-height:1.4}
 .fld input:focus,.fld textarea:focus{border-color:#555}
+
+/* Font size control */
+.fs-row{display:flex;align-items:center;justify-content:space-between}
+.fs-ctrl{display:flex;align-items:center;gap:4px}
+.fs-btn{width:20px;height:20px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#888;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.fs-btn:hover{border-color:#555;color:#fff}
+.fs-val{font-size:9px;color:#666;min-width:28px;text-align:center;font-variant-numeric:tabular-nums}
 
 /* Overlay controls row */
 .ov-row{display:flex;gap:16px;align-items:flex-start;margin-top:10px;flex-wrap:wrap}
@@ -62,9 +65,6 @@ h1{text-align:center;margin-bottom:6px;font-size:22px}
 .ov-intensity .ov-val{font-size:11px;color:#888;min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
 
 /* CTA toggle */
-.cta-toggle{display:flex;align-items:center;gap:8px;margin-top:10px}
-.cta-toggle label{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px}
-.cta-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#c0392b;cursor:pointer}
 
 /* Image info */
 .img-info{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px;background:#0a0a0a;border-radius:8px;border:1px solid #2a2a2a}
@@ -155,12 +155,12 @@ var sel = {}, asl = null;
 S.forEach(function(s) {
   if (s.selectedImage && s.selectedImage.id) sel[s.num] = s.selectedImage.id;
   if (s.overlayIntensity === undefined) s.overlayIntensity = 72;
-  if (s.showCta === undefined) s.showCta = (s.type === "CTA" || s.type === "PROMO");
   if (!s.storyTemplate) {
     var tmplMap = { bottom:"S1", left:"S2", top:"S3", right:"S4", gradientBrand:"S6" };
     s.storyTemplate = tmplMap[s.overlay] || "S1";
   }
   if (s.overlayTopIntensity === undefined) s.overlayTopIntensity = 55;
+  if (!s.fontScale) s.fontScale = {};
 });
 
 // Inject custom fonts
@@ -192,6 +192,48 @@ document.getElementById("page-sub").textContent =
 
 function esc(s) { return (s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;") }
 
+// Helper: get current field values for a slide (from DOM or fallback to slide data)
+function getSlideFields(sn) {
+  var s = S.find(function(x) { return x.num === sn });
+  if (!s) return {};
+  var hi  = document.querySelector('.eh[data-s="' + sn + '"]');
+  var bi  = document.querySelector('.eb[data-s="' + sn + '"]');
+  var pi  = document.querySelector('.ep[data-s="' + sn + '"]');
+  var ci  = document.querySelector('.ec[data-s="' + sn + '"]');
+  var si  = document.querySelector('.es[data-s="' + sn + '"]');
+  var poi = document.querySelector('.epo[data-s="' + sn + '"]');
+  var pni = document.querySelector('.epn[data-s="' + sn + '"]');
+  return {
+    headline:  hi  ? hi.value  : (s.headline || ""),
+    body:      bi  ? bi.value  : (s.body || ""),
+    pretitle:  pi  ? pi.value  : (s.pretitle || ""),
+    cta:       ci  ? ci.value  : (s.cta || ""),
+    subtitle:  si  ? si.value  : (s.subtitle || ""),
+    price_old: poi ? poi.value : (s.price_old || ""),
+    price_new: pni ? pni.value : (s.price_new || "")
+  };
+}
+
+// Helper: render preview with current field values
+function renderPreviewForSlide(s) {
+  var f = getSlideFields(s.num);
+  return renderPreview(s, f.headline, f.body, f.pretitle, f.cta, f.subtitle, f.price_old, f.price_new);
+}
+
+// Helper: save field values from DOM into slide object
+function saveSlideFields(sn) {
+  var s = S.find(function(x) { return x.num === sn });
+  if (!s) return;
+  var f = getSlideFields(sn);
+  s.headline  = f.headline;
+  s.body      = f.body;
+  s.pretitle  = f.pretitle;
+  s.cta       = f.cta;
+  s.subtitle  = f.subtitle;
+  s.price_old = f.price_old;
+  s.price_new = f.price_new;
+}
+
 // Build overlay gradient with custom intensity
 function buildOverlayGrad(direction, intensity) {
   var a1 = (intensity / 100).toFixed(2);
@@ -219,7 +261,7 @@ function getImageThumb(slideNum) {
   return null;
 }
 
-function renderPreview(s, headline, body, pretitle, cta) {
+function renderPreview(s, headline, body, pretitle, cta, subtitle, price_old, price_new) {
   var pal  = DS.palette    || {};
   var typo = DS.typography || {};
   var primary      = pal.primary      || "#FA5701";
@@ -231,6 +273,8 @@ function renderPreview(s, headline, body, pretitle, cta) {
   var intensity = s.overlayIntensity !== undefined ? s.overlayIntensity : 72;
   var template  = s.storyTemplate || "S1";
   var img       = getImageThumb(s.num);
+  var fs = s.fontScale || {};
+  function sz(base, key) { return (base * (fs[key] || 1)).toFixed(1) + "px"; }
 
   var a1 = (intensity / 100).toFixed(2);
   var a2 = (intensity * 0.65 / 100).toFixed(2);
@@ -245,15 +289,6 @@ function renderPreview(s, headline, body, pretitle, cta) {
     ? '<img style="height:16px;width:auto;max-width:55%;object-fit:contain;opacity:.92;flex-shrink:0" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">'
     : '';
 
-  // Swipe-up CTA bar
-  var ctaBarHTML = "";
-  if (s.showCta) {
-    var ctaLabel = cta || "Ver mais";
-    ctaBarHTML = '<div class="preview-cta-area" style="font-family:' + bFont + ';color:#fff">'
-      + '<svg fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
-      + '<span style="font-size:6.5px;letter-spacing:.5px">' + esc(ctaLabel).toUpperCase() + '</span>'
-      + '</div>';
-  }
 
   // Safe zone guides
   var safeGuides = '<div class="preview-safe-top" title="Zona segura — 15%"></div>'
@@ -273,10 +308,10 @@ function renderPreview(s, headline, body, pretitle, cta) {
     inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
     inner += logo;
     inner += '<div style="margin-top:auto;text-align:center">';
-    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:5px;letter-spacing:1.5px;text-transform:uppercase;color:' + primary + ';margin-bottom:2px">' + esc(pretitle) + '</div>';
-    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:13px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
-    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:6px;line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
-    if (cta) inner += '<div style="font-family:' + bFont + ';font-size:5.5px;color:' + primary + ';font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:4px">' + esc(cta) + ' →</div>';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';letter-spacing:1.5px;text-transform:uppercase;color:' + primary + ';margin-bottom:2px">' + esc(pretitle) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(13,"headline") + ';line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:' + sz(6,"body") + ';line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    if (cta) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"cta") + ';color:' + primary + ';font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:4px">' + esc(cta) + ' →</div>';
     inner += '</div></div>';
   }
 
@@ -288,9 +323,9 @@ function renderPreview(s, headline, body, pretitle, cta) {
     inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
     inner += '<div style="display:flex;justify-content:flex-end">' + logo + '</div>';
     inner += '<div style="margin-top:auto;margin-bottom:8px;width:45%;max-width:45%">';
-    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:2px">' + esc(pretitle) + '</div>';
-    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
-    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.8);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:2px">' + esc(pretitle) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.8);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
     inner += '</div></div>';
   }
 
@@ -302,16 +337,16 @@ function renderPreview(s, headline, body, pretitle, cta) {
     inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
     inner += logo;
     inner += '<div style="margin-top:auto;width:100%">';
-    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';text-align:center;margin-bottom:5px;white-space:pre-line">' + esc(headline) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';text-align:center;margin-bottom:5px;white-space:pre-line">' + esc(headline) + '</div>';
     var listItems = (body || "").split(/[\n·•]/).map(function(l){return l.trim()}).filter(Boolean);
     if (listItems.length) {
       inner += '<ul style="list-style:disc;padding-left:14px;margin:0">';
       listItems.forEach(function(item) {
-        inner += '<li style="font-family:' + bFont + ';font-size:5.5px;color:#fff;margin-bottom:2px;line-height:1.3">' + esc(item) + '</li>';
+        inner += '<li style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';color:#fff;margin-bottom:2px;line-height:1.3">' + esc(item) + '</li>';
       });
       inner += '</ul>';
     } else if (body) {
-      inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.8);white-space:pre-line">' + esc(body) + '</div>';
+      inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.8);white-space:pre-line">' + esc(body) + '</div>';
     }
     inner += '</div></div>';
   }
@@ -324,10 +359,10 @@ function renderPreview(s, headline, body, pretitle, cta) {
     inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
     inner += logo;
     inner += '<div style="margin-top:auto;text-align:center;margin-bottom:6px">';
-    if (pretitle) inner += '<div style="display:inline-block;margin-bottom:4px;font-family:' + bFont + ';font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + primary + ';color:#fff;padding:2px 7px;border-radius:99px">' + esc(pretitle) + '</div><br>';
-    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';margin:3px 0;white-space:pre-line">' + esc(headline) + '</div>';
-    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.82);margin:4px 0 6px;white-space:pre-line">' + esc(body) + '</div>';
-    if (cta)      inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:5.5px;background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25)">' + esc(cta) + '</div>';
+    if (pretitle) inner += '<div style="display:inline-block;margin-bottom:4px;font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + primary + ';color:#fff;padding:2px 7px;border-radius:99px">' + esc(pretitle) + '</div><br>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';margin:3px 0;white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.82);margin:4px 0 6px;white-space:pre-line">' + esc(body) + '</div>';
+    if (cta)      inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(5.5,"cta") + ';background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25)">' + esc(cta) + '</div>';
     inner += '</div></div>';
   }
 
@@ -340,13 +375,13 @@ function renderPreview(s, headline, body, pretitle, cta) {
     inner += '<div style="display:flex;justify-content:flex-end">' + logo + '</div>';
     inner += '<div style="margin-top:auto;margin-bottom:6px">';
     if (pretitle) {
-      inner += '<div style="display:inline-flex;align-items:center;gap:3px;margin-bottom:4px;font-family:' + bFont + ';font-size:5px;background:rgba(250,87,1,.15);color:' + primary + ';padding:2px 7px;border-radius:99px;border:1px solid rgba(250,87,1,.3)">';
+      inner += '<div style="display:inline-flex;align-items:center;gap:3px;margin-bottom:4px;font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';background:rgba(250,87,1,.15);color:' + primary + ';padding:2px 7px;border-radius:99px;border:1px solid rgba(250,87,1,.3)">';
       inner += '<span style="width:4px;height:4px;border-radius:50%;background:' + primary + ';display:inline-block;flex-shrink:0"></span>' + esc(pretitle) + '</div><br>';
     }
-    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';margin:2px 0 4px;white-space:pre-line">' + esc(headline) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';margin:2px 0 4px;white-space:pre-line">' + esc(headline) + '</div>';
     var rows = (body || "").split(/[\n·•]/).map(function(l){return l.trim()}).filter(Boolean);
     rows.forEach(function(row) {
-      inner += '<div style="display:flex;align-items:center;gap:3px;font-family:' + bFont + ';font-size:5px;color:#d4d4d8;margin-top:2px">';
+      inner += '<div style="display:flex;align-items:center;gap:3px;font-family:' + bFont + ';font-size:' + sz(5,"body") + ';color:#d4d4d8;margin-top:2px">';
       inner += '<svg style="width:7px;height:7px;color:' + primary + ';flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
       inner += esc(row) + '</div>';
     });
@@ -364,8 +399,8 @@ function renderPreview(s, headline, body, pretitle, cta) {
   else if (template === "S6") {
     // Badge (pretitle pill)
     var s6BadgeStyle = isGradBg
-      ? "font-family:" + bFont + ";font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:#fff;color:" + (pal.primaryDark || "#612100") + ";padding:2px 7px;border-radius:99px"
-      : "font-family:" + bFont + ";font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:" + primary + ";color:#fff;padding:2px 7px;border-radius:99px";
+      ? "font-family:" + bFont + ";font-size:" + sz(5,"pretitle") + ";font-weight:700;text-transform:uppercase;letter-spacing:1px;background:#fff;color:" + (pal.primaryDark || "#612100") + ";padding:2px 7px;border-radius:99px"
+      : "font-family:" + bFont + ";font-size:" + sz(5,"pretitle") + ";font-weight:700;text-transform:uppercase;letter-spacing:1px;background:" + primary + ";color:#fff;padding:2px 7px;border-radius:99px";
     // Logo
     var s6LogoHTML = s.showLogo && DS.logoB64
       ? '<img style="height:' + (isGradBg ? "13px" : "11px") + ';width:auto;object-fit:contain;opacity:.92;flex-shrink:0" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">'
@@ -377,7 +412,7 @@ function renderPreview(s, headline, body, pretitle, cta) {
       + '</div>';
     // CTA: ig-badge-outline (DS exato: rgba(0,0,0,.4) + border rgba branca)
     var s6Cta = cta
-      ? '<div style="display:inline-block;font-family:' + bFont + ';font-size:5.5px;font-weight:500;background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(4px);margin-top:5px">' + esc(cta) + '</div>'
+      ? '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(5.5,"cta") + ';font-weight:500;background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(4px);margin-top:5px">' + esc(cta) + '</div>'
       : "";
 
     if (isGradBg) {
@@ -385,8 +420,8 @@ function renderPreview(s, headline, body, pretitle, cta) {
       inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
       inner += s6Header;
       inner += '<div style="margin-top:auto;text-align:center">';
-      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:13px;line-height:1.0;color:#fff;white-space:pre-line">' + esc(headline) + '</div>';
-      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(13,"headline") + ';line-height:1.0;color:#fff;white-space:pre-line">' + esc(headline) + '</div>';
+      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
       inner += s6Cta + '</div></div>';
     } else {
       // Com foto → dual overlay (top + bottom com intensidades independentes)
@@ -401,17 +436,262 @@ function renderPreview(s, headline, body, pretitle, cta) {
       inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
       inner += s6Header;
       inner += '<div style="margin-top:auto;text-align:center">';
-      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
-      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
       inner += s6Cta + '</div></div>';
     }
+  }
+
+  // ─── S7: Testimonial ───
+  // overlay top+bottom, citação centralizada
+  else if (template === "S7") {
+    var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
+    var a1t = (topI / 100).toFixed(2); var a2t = (topI * 0.5 / 100).toFixed(2);
+    var a1b = (intensity / 100).toFixed(2); var a2b = (intensity * 0.5 / 100).toFixed(2);
+    inner += '<div class="preview-ov" style="background:linear-gradient(to bottom,rgba(0,0,0,' + a1t + ') 0%,rgba(0,0,0,' + a2t + ') 50%,rgba(0,0,0,0) 100%);height:35%;top:0;bottom:auto"></div>';
+    inner += '<div class="preview-ov" style="background:linear-gradient(to top,rgba(0,0,0,' + a1b + ') 0%,rgba(0,0,0,' + a2b + ') 50%,rgba(0,0,0,0) 100%);height:40%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="text-align:center;margin:auto 0;padding:0 5%">';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.1;color:' + textLight + ';font-style:italic;white-space:pre-line">"' + esc(headline) + '"</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';color:rgba(255,255,255,.7);margin-top:4px;white-space:pre-line">— ' + esc(body) + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S8: Highlight Product ───
+  // overlay left 60%, badge accent + nome do prato + preço em cor primária + descrição
+  else if (template === "S8") {
+    var ovGrad = "linear-gradient(to right,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 40%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';width:65%;height:100%;left:0;right:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;margin-bottom:8px;width:50%">';
+    inner += '<div style="display:inline-flex;align-items:center;gap:3px;margin-bottom:4px;font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';background:rgba(250,87,1,.15);color:' + primary + ';padding:2px 7px;border-radius:99px;border:1px solid rgba(250,87,1,.3)">' + esc(pretitle || "ESPECIAL") + '</div><br>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(12,"headline") + ';line-height:0.95;color:' + textLight + ';margin-top:3px;white-space:pre-line">' + esc(headline || "NOME DO\nPRATO") + '</div>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(10,"price_new") + ';line-height:0.95;color:' + primary + ';margin-top:3px">' + esc(price_new || "R$ 00,00") + '</div>';
+    if (subtitle) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"subtitle") + ';color:rgba(255,255,255,.7);margin-top:2px">' + esc(subtitle) + '</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5.5,"body") + ';line-height:1.3;color:rgba(255,255,255,.8);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S9: Weekly Schedule ───
+  // overlay bottom 70%, tabela/lista elegante + CTA
+  else if (template === "S9") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:72%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;width:100%">';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';text-align:center;margin-bottom:6px;white-space:pre-line">' + esc(headline || "AGENDA DA\nSEMANA") + '</div>';
+    var rows = (body || "QUI: Música ao vivo\nSEX: Dose dupla\nSÁB: Feijoada").split(/[\n·•]/).map(function(l){return l.trim()}).filter(Boolean);
+    rows.forEach(function(row) {
+      var parts = row.split(/[:\-–]/).map(function(p){return p.trim()});
+      inner += '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.1);font-family:' + bFont + ';font-size:' + sz(5,"body") + ';color:rgba(255,255,255,.8)">';
+      inner += '<span style="color:' + primary + '">' + esc(parts[0] || row) + '</span>';
+      if (parts[1]) inner += '<span>' + esc(parts[1]) + '</span>';
+      inner += '</div>';
+    });
+    if (cta) inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(5,"cta") + ';background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);margin-top:6px">' + esc(cta) + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S10: Oferta Explosiva ───
+  // overlay bottom 60%, badge dourado + nome + preço antigo riscado + preço novo grande + body + CTA
+  else if (template === "S10") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:65%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;text-align:center;margin-bottom:6px">';
+    inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(5,"pretitle") + ';font-weight:700;text-transform:uppercase;letter-spacing:1px;background:#D4A843;color:#1A0A08;padding:2px 8px;border-radius:99px;margin-bottom:4px">' + esc(pretitle || "PROMOÇÃO") + '</div><br>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:0.9;color:' + textLight + ';text-shadow:2px 2px 4px rgba(0,0,0,.8);white-space:pre-line">' + esc(headline || "NOME DO\nPRATO") + '</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"body") + ';line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    if (price_old) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(6,"price_old") + ';color:rgba(255,255,255,.5);text-decoration:line-through;margin-top:4px">De ' + esc(price_old) + '</div>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(14,"price_new") + ';color:#D4A843;text-shadow:2px 2px 4px rgba(0,0,0,.8);margin-top:1px">' + esc(price_new || "R$ 00,00") + '</div>';
+    if (cta) inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(5,"cta") + ';background:' + primary + ';color:#fff;padding:3px 12px;border-radius:99px;margin-top:6px;font-weight:600">' + esc(cta) + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S11: Promo Topo ───
+  // overlay top 45%, badge borda dourada + headline + body + preços em pill glass
+  else if (template === "S11") {
+    var ovGrad = "linear-gradient(to bottom,rgba(16,8,6," + a1 + ") 0%,rgba(16,8,6," + a2 + ") 50%,transparent 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:48%;top:0;bottom:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    inner += '<div style="margin-top:2px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;padding-right:4px">';
+    inner += '<div style="display:inline-flex;font-family:' + bFont + ';font-size:' + sz(4.5,"pretitle") + ';text-transform:uppercase;letter-spacing:1px;background:transparent;color:#D4A843;padding:2px 7px;border-radius:99px;border:1px solid #D4A843;margin-bottom:4px">' + esc(pretitle || "PROMOÇÃO") + '</div>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:1.0;color:' + textLight + ';text-shadow:2px 2px 4px rgba(0,0,0,.8);white-space:pre-line">' + esc(headline || "NOME DO\nPRATO") + '</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"body") + ';line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;white-space:pre-line;text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + esc(body) + '</div>';
+    // Glass pill com preços
+    inner += '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.4);padding:2px 5px;border-radius:12px;border:1px solid rgba(255,255,255,.1);margin-top:4px">';
+    if (price_old) inner += '<span style="font-family:' + bFont + ';font-size:' + sz(4.5,"price_old") + ';color:rgba(255,255,255,.5);text-decoration:line-through;text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + esc(price_old) + '</span>';
+    inner += '<span style="font-family:' + hFont + ';font-size:' + sz(10,"price_new") + ';color:#D4A843;line-height:0.9;text-shadow:2px 2px 4px rgba(0,0,0,.8)">' + esc(price_new || "R$ 00,00") + '</span>';
+    inner += '</div>';
+    inner += '</div>';
+    inner += '<div style="margin-top:auto;display:flex;justify-content:center">' + logo + '</div>';
+    inner += '</div>';
+  }
+
+  // ─── S12: Promo Lateral ───
+  // overlay bottom 50%, badge outline dourado + headline + body + preços + border-left accent
+  else if (template === "S12") {
+    var ovGrad = "linear-gradient(to top,rgba(16,8,6," + a1 + ") 20%,transparent 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:55%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    inner += '<div style="display:flex;justify-content:flex-start;margin-left:4px">' + logo + '</div>';
+    inner += '<div style="margin-top:auto;margin-bottom:8px;width:50%;border-left:2px solid ' + primary + ';padding-left:4px">';
+    inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:' + sz(4.5,"pretitle") + ';font-weight:500;text-transform:uppercase;letter-spacing:1px;background:transparent;color:#D4A843;padding:2px 5px;border-radius:99px;border:1px solid #D4A843;margin-bottom:4px">' + esc(pretitle || "IMPERDÍVEL") + '</div><br>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(11,"headline") + ';line-height:0.9;color:' + textLight + ';margin-top:2px;text-shadow:2px 2px 4px rgba(0,0,0,.8);white-space:pre-line">' + esc(headline || "NOME DO\nPRATO") + '</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"body") + ';line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;text-shadow:1px 1px 3px rgba(0,0,0,.8);white-space:pre-line">' + esc(body) + '</div>';
+    if (price_old) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"price_old") + ';color:rgba(255,255,255,.5);text-decoration:line-through;margin-top:4px;text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + esc(price_old) + '</div>';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(12,"price_new") + ';color:#D4A843;margin-top:1px;text-shadow:2px 2px 4px rgba(0,0,0,.8)">' + esc(price_new || "R$ 00,00") + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S13: Promo Card (Glassmorphism) ───
+  // logo centralizada + card glass com headline + subtitle dourado + body
+  else if (template === "S13") {
+    inner += '<div class="preview-ov" style="background:linear-gradient(to top,rgba(16,8,6,.7) 0%,transparent 100%);height:45%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    // Card glassmorphism
+    inner += '<div style="margin-top:auto;margin-bottom:6px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 5px;border-radius:6px;border:1px solid rgba(255,255,255,.1);text-align:center;width:75%;display:flex;flex-direction:column;align-items:center">';
+    inner += '<div style="font-family:' + hFont + ';font-size:' + sz(10,"headline") + ';line-height:1.0;color:' + textLight + ';text-shadow:2px 2px 4px rgba(0,0,0,.8);white-space:pre-line">' + esc(headline || "HEADLINE\nPRINCIPAL") + '</div>';
+    inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"subtitle") + ';color:#D4A843;text-transform:uppercase;letter-spacing:1.5px;margin-top:3px">' + esc(subtitle || "Subtítulo dourado") + '</div>';
+    if (body) {
+      inner += '<div style="border-top:1px solid rgba(255,255,255,.12);margin-top:4px;padding-top:4px;width:100%">';
+      inner += '<div style="font-family:' + bFont + ';font-size:' + sz(5,"body") + ';line-height:1.5;color:rgba(255,255,255,.7);white-space:pre-line">' + esc(body) + '</div>';
+      inner += '</div>';
+    }
+    inner += '</div></div>';
+  }
+
+  // ─── S14: Infos Centro ───
+  // overlays superior e inferior, headline no topo, info rows com ícones no rodapé + logo fundo
+  else if (template === "S14") {
+    var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
+    var a1t = (topI / 100).toFixed(2); var a2t = (topI * 0.5 / 100).toFixed(2);
+    var a1b = (intensity / 100).toFixed(2); var a2b = (intensity * 0.5 / 100).toFixed(2);
+    inner += '<div class="preview-ov" style="background:linear-gradient(to bottom,rgba(16,8,6,' + a1t + ') 30%,transparent 100%);height:35%;top:0;bottom:auto"></div>';
+    inner += '<div class="preview-ov" style="background:linear-gradient(to top,rgba(16,8,6,' + a1b + ') 30%,transparent 100%);height:38%;bottom:0;top:auto"></div>';
+    // Logo watermark no fundo
+    if (s.showLogo && DS.logoB64) inner += '<img style="position:absolute;bottom:50%;left:50%;transform:translate(-50%,50%);height:40px;width:auto;object-fit:contain;opacity:.06;z-index:1" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    // Topo: logo + headline + subtitle
+    inner += '<div style="text-align:center;margin-top:2px">';
+    inner += logo;
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(10,"headline") + ';line-height:1.0;color:' + textLight + ';text-shadow:2px 2px 4px rgba(0,0,0,.8);margin-top:4px;white-space:pre-line">' + esc(headline) + '</div>';
+    inner += '</div>';
+    // Rodapé: info rows com ícones
+    if (body) {
+      var infoLines = body.split(/\n/).filter(function(l){return l.trim()});
+      inner += '<div style="margin-top:auto;margin-bottom:2px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px">';
+      // Detecta e agrupa linhas por seção
+      var sections = [];
+      var currentSection = {icon:"", label:"", lines:[]};
+      infoLines.forEach(function(line) {
+        var trimmed = line.trim();
+        // Detecta padrões de horário (contém "h" seguido de "às" ou horários)
+        if (trimmed.match(/\d+h/i) || trimmed.match(/seg|ter|qua|qui|sex|sáb|sab|dom/i)) {
+          if (currentSection.icon !== "clock") {
+            if (currentSection.lines.length > 0) sections.push(currentSection);
+            currentSection = {icon:"clock", label:"Funcionamento", lines:[]};
+          }
+          currentSection.lines.push(trimmed);
+        }
+        // Detecta padrões de endereço
+        else if (trimmed.match(/av\.|rua |r\. |jardim|bairro|cep|\/[a-z]{2}$/i) || trimmed.match(/\d+.*,\s*\d/)) {
+          if (currentSection.icon !== "pin") {
+            if (currentSection.lines.length > 0) sections.push(currentSection);
+            currentSection = {icon:"pin", label:"Localização", lines:[]};
+          }
+          currentSection.lines.push(trimmed);
+        } else {
+          currentSection.lines.push(trimmed);
+        }
+      });
+      if (currentSection.lines.length > 0) sections.push(currentSection);
+      sections.forEach(function(sec, i) {
+        if (i > 0) inner += '<div style="width:15px;height:1px;background:rgba(255,255,255,.15)"></div>';
+        var iconSvg = "";
+        if (sec.icon === "clock") iconSvg = '<svg style="width:6px;height:6px;margin-right:2px;vertical-align:middle" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+        else if (sec.icon === "pin") iconSvg = '<svg style="width:6px;height:6px;margin-right:2px;vertical-align:middle" viewBox="0 0 24 24" fill="none" stroke="#D4A843" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+        if (sec.label && sec.icon) inner += '<div style="font-family:' + bFont + ';font-size:4px;color:#D4A843;text-transform:uppercase;letter-spacing:1px">' + iconSvg + esc(sec.label) + '</div>';
+        inner += '<div style="font-family:' + bFont + ';font-size:5px;line-height:1.3;color:rgba(255,255,255,.85);text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + sec.lines.map(function(l){return esc(l)}).join("<br>") + '</div>';
+      });
+      inner += '</div>';
+    }
+    inner += '</div>';
+  }
+
+  // ─── S15: Infos Lateral ───
+  // overlays superior e inferior, texto deslocado à esquerda com border-left accent + info rows no rodapé
+  else if (template === "S15") {
+    var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
+    var a1t = (topI / 100).toFixed(2); var a2t = (topI * 0.5 / 100).toFixed(2);
+    var a1b = (intensity / 100).toFixed(2); var a2b = (intensity * 0.5 / 100).toFixed(2);
+    inner += '<div class="preview-ov" style="background:linear-gradient(to bottom,rgba(16,8,6,' + a1t + ') 30%,transparent 100%);height:35%;top:0;bottom:auto"></div>';
+    inner += '<div class="preview-ov" style="background:linear-gradient(to top,rgba(16,8,6,' + a1b + ') 30%,transparent 100%);height:38%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    // Título com border-left accent
+    inner += '<div style="margin-top:4px;width:55%;border-left:2px solid ' + primary + ';padding-left:4px">';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:' + sz(10,"headline") + ';line-height:1.0;color:' + textLight + ';text-shadow:2px 2px 4px rgba(0,0,0,.8);white-space:pre-line">' + esc(headline) + '</div>';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:' + sz(4.5,"pretitle") + ';color:rgba(255,255,255,.7);margin-top:2px;text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + esc(pretitle) + '</div>';
+    inner += '</div>';
+    // Rodapé: info rows + logo
+    inner += '<div style="margin-top:auto;margin-bottom:2px;display:flex;justify-content:space-between;align-items:flex-end;width:100%">';
+    if (body) {
+      inner += '<div style="display:flex;flex-direction:column;gap:3px">';
+      var infoLines15 = body.split(/\n/).filter(function(l){return l.trim()});
+      // Agrupa linhas em seções detectando padrões
+      var secs15 = []; var curSec15 = {label:"", lines:[]};
+      infoLines15.forEach(function(line) {
+        var t = line.trim();
+        if (t.match(/\d+h/i) || t.match(/seg|ter|qua|qui|sex|sáb|sab|dom/i)) {
+          if (curSec15.label !== "Horário") {
+            if (curSec15.lines.length > 0) secs15.push(curSec15);
+            curSec15 = {label:"Horário", lines:[]};
+          }
+          curSec15.lines.push(t);
+        } else if (t.match(/av\.|rua |r\. |jardim|bairro|\/[a-z]{2}$/i)) {
+          if (curSec15.label !== "Endereço") {
+            if (curSec15.lines.length > 0) secs15.push(curSec15);
+            curSec15 = {label:"Endereço", lines:[]};
+          }
+          curSec15.lines.push(t);
+        } else {
+          curSec15.lines.push(t);
+        }
+      });
+      if (curSec15.lines.length > 0) secs15.push(curSec15);
+      secs15.forEach(function(sec) {
+        if (sec.label) inner += '<div style="font-family:' + bFont + ';font-size:4px;color:#D4A843;font-weight:700;text-transform:uppercase">' + esc(sec.label) + '</div>';
+        inner += '<div style="font-family:' + bFont + ';font-size:4.5px;line-height:1.3;color:rgba(255,255,255,.85);text-shadow:1px 1px 3px rgba(0,0,0,.8)">' + sec.lines.map(function(l){return esc(l)}).join("<br>") + '</div>';
+      });
+      inner += '</div>';
+    }
+    // Logo no canto inferior direito
+    if (s.showLogo && DS.logoB64) inner += '<img style="height:12px;width:auto;object-fit:contain;opacity:.7;margin-bottom:1px" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">';
+    inner += '</div></div>';
+  }
+
+  // ─── Fallback: template desconhecido → S1 ───
+  else {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:55%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;text-align:center">';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:5px;letter-spacing:1.5px;text-transform:uppercase;color:' + primary + ';margin-bottom:2px">' + esc(pretitle) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:13px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+    if (body) inner += '<div style="font-family:' + bFont + ';font-size:6px;line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    inner += '</div></div>';
   }
 
   return '<div class="preview">'
     + '<div class="preview-bg" style="' + bgStyle + '"></div>'
     + inner
     + safeGuides
-    + ctaBarHTML
     + '</div>';
 }
 
@@ -419,6 +699,49 @@ function renderPreview(s, headline, body, pretitle, cta) {
 function typeColor(type) {
   var map = { COVER:"#e67e22", INFO:"#2980b9", LIST:"#27ae60", BEHIND:"#8e44ad", PROMO:"#e74c3c", CTA:"#8e44ad" };
   return map[type] || "#c0392b";
+}
+
+// Template field definitions — which fields each template shows and their labels
+function getTemplateFields(tmpl) {
+  // All possible fields with defaults
+  var all = [
+    {key:"pretitle",  cls:"ep",  type:"input",    label:"Pré-título",    placeholder:"Tag, categoria, número..."},
+    {key:"headline",  cls:"eh",  type:"textarea", rows:3, label:"Headline", placeholder:"Título principal..."},
+    {key:"subtitle",  cls:"es",  type:"input",    label:"Subtítulo",     placeholder:"Complemento do título..."},
+    {key:"body",      cls:"eb",  type:"textarea", rows:2, label:"Body",  placeholder:"Texto complementar..."},
+    {key:"price_old", cls:"epo", type:"input",    label:"Preço antigo",  placeholder:"Ex: R$149,00"},
+    {key:"price_new", cls:"epn", type:"input",    label:"Preço novo",    placeholder:"Ex: R$99,90"},
+    {key:"cta",       cls:"ec",  type:"input",    label:"CTA",           placeholder:"Texto do botão ou barra..."}
+  ];
+
+  // Per-template visibility and label overrides
+  var config = {
+    "S1":  {show:["pretitle","headline","body","cta"]},
+    "S2":  {show:["pretitle","headline","body"]},
+    "S3":  {show:["headline","body"], labels:{body:"Itens da lista", bodyPlaceholder:"Um item por linha (separados por Enter)"}},
+    "S4":  {show:["pretitle","headline","body","cta"], labels:{pretitle:"Badge", cta:"CTA (botão outline)"}},
+    "S5":  {show:["pretitle","headline","body"], labels:{pretitle:"Badge accent", body:"Info rows", bodyPlaceholder:"Uma info por linha (ex: Local · Horário)"}},
+    "S6":  {show:["pretitle","headline","body","cta"], labels:{pretitle:"Badge", cta:"CTA (botão outline)"}},
+    "S7":  {show:["headline","body"], labels:{headline:"Citação", headlinePlaceholder:"Texto da citação...", body:"Autor", bodyPlaceholder:"Nome do autor..."}},
+    "S8":  {show:["pretitle","headline","subtitle","body","price_new"], labels:{pretitle:"Badge accent", headline:"Nome do prato", subtitle:"Complemento", price_new:"Preço", price_newPlaceholder:"Ex: R$129,90"}},
+    "S9":  {show:["headline","body","cta"], labels:{body:"Agenda / Itens", bodyPlaceholder:"Dia: Evento (um por linha)\nEx: QUI: Música Sertaneja", cta:"CTA (botão outline)"}},
+    "S10": {show:["pretitle","headline","body","price_old","price_new","cta"], labels:{pretitle:"Badge (dourado)", headline:"Nome do prato", body:"Acompanhamentos", price_old:"De (preço antigo)", price_new:"Por (preço novo)", cta:"CTA (botão)"}},
+    "S11": {show:["pretitle","headline","body","price_old","price_new"], labels:{pretitle:"Badge (borda dourada)", body:"Acompanhamentos"}},
+    "S12": {show:["pretitle","headline","body","price_old","price_new"], labels:{pretitle:"Badge (borda dourada)", body:"Acompanhamentos"}},
+    "S13": {show:["headline","subtitle","body"], labels:{headline:"Headline principal", subtitle:"Subtítulo (cor dourada)", body:"Endereço / Horários", bodyPlaceholder:"Av. Ranulpho, 111 — Jardim Camburi\nSeg a Sex: 16h às 00h"}},
+    "S14": {show:["headline","body"], labels:{headline:"Headline", body:"Endereço / Horários / Info", bodyPlaceholder:"Av. Ranulpho, 111 — Jardim Camburi\nSeg-Sex: 16h às 00h\nSáb-Dom: 10h às 00h"}},
+    "S15": {show:["pretitle","headline","body"], labels:{pretitle:"Tag", headline:"Preço ou destaque", headlinePlaceholder:"Ex: R$ 49,90"}}
+  };
+
+  var cfg = config[tmpl] || config["S1"];
+  var labels = cfg.labels || {};
+
+  return all.map(function(f) {
+    var visible = cfg.show.indexOf(f.key) > -1;
+    var label = labels[f.key] || f.label;
+    var placeholder = labels[f.key + "Placeholder"] || f.placeholder;
+    return {key:f.key, cls:f.cls, type:f.type, rows:f.rows, label:label, placeholder:placeholder, visible:visible};
+  });
 }
 
 function render() {
@@ -435,39 +758,61 @@ function render() {
 
     // Left: preview
     h += '<div class="slide-left" id="prev-' + s.num + '">';
-    h += renderPreview(s, s.headline, s.body, s.pretitle, s.cta);
+    h += renderPreview(s, s.headline, s.body, s.pretitle, s.cta, s.subtitle, s.price_old, s.price_new);
     h += '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
     h += '</div>';
 
     // Right: controls
     h += '<div class="slide-right">';
 
-    // All text fields
+    // Dynamic text fields based on template
+    var fieldConfig = getTemplateFields(tmpl);
     h += '<div class="fld">';
-    h += '<label>Pré-título</label>';
-    h += '<input class="ep" data-s="' + s.num + '" value="' + esc(s.pretitle || "") + '" placeholder="Opcional...">';
-    h += '<label>Headline</label>';
-    h += '<textarea class="eh" data-s="' + s.num + '" rows="3">' + esc(s.headline || "") + '</textarea>';
-    h += '<label>Body</label>';
-    h += '<textarea class="eb" data-s="' + s.num + '" rows="2">' + esc(s.body || "") + '</textarea>';
-    h += '<label>CTA</label>';
-    h += '<input class="ec" data-s="' + s.num + '" value="' + esc(s.cta || "") + '" placeholder="Texto do botão ou barra...">';
+    fieldConfig.forEach(function(fc) {
+      var val = s[fc.key] || "";
+      var vis = fc.visible ? "" : "display:none;";
+      if (fc.type === "input") {
+        h += '<div class="field-wrap" data-field="' + fc.key + '" style="' + vis + '">';
+        var scaleVal = Math.round((s.fontScale[fc.key] || 1) * 100);
+        h += '<div class="fs-row"><label>' + fc.label + '</label>';
+        h += '<div class="fs-ctrl"><div class="fs-btn fs-minus" data-s="' + s.num + '" data-fk="' + fc.key + '">−</div>';
+        h += '<span class="fs-val">' + scaleVal + '%</span>';
+        h += '<div class="fs-btn fs-plus" data-s="' + s.num + '" data-fk="' + fc.key + '">+</div></div></div>';
+        h += '<input class="' + fc.cls + '" data-s="' + s.num + '" value="' + esc(val) + '" placeholder="' + (fc.placeholder || "") + '">';
+        h += '</div>';
+      } else {
+        h += '<div class="field-wrap" data-field="' + fc.key + '" style="' + vis + '">';
+        var scaleVal = Math.round((s.fontScale[fc.key] || 1) * 100);
+        h += '<div class="fs-row"><label>' + fc.label + '</label>';
+        h += '<div class="fs-ctrl"><div class="fs-btn fs-minus" data-s="' + s.num + '" data-fk="' + fc.key + '">−</div>';
+        h += '<span class="fs-val">' + scaleVal + '%</span>';
+        h += '<div class="fs-btn fs-plus" data-s="' + s.num + '" data-fk="' + fc.key + '">+</div></div></div>';
+        h += '<textarea class="' + fc.cls + '" data-s="' + s.num + '" rows="' + (fc.rows || 2) + '" placeholder="' + (fc.placeholder || "") + '">' + esc(val) + '</textarea>';
+        h += '</div>';
+      }
+    });
     h += '</div>';
 
-    // Template selector S1-S6
-    var tmplDescs = { S1:"Centralizado", S2:"Assimétrico", S3:"Lista", S4:"Destaque", S5:"Setup", S6:"Promo" };
-    h += '<div class="fld"><label>Template de Story</label>';
+    // Template selector — dynamic from DS.storyTemplates or fallback S1-S6
+    var allTemplates = DS.storyTemplates || {};
+    var tmplKeys = Object.keys(allTemplates);
+    if (!tmplKeys.length) tmplKeys = ["S1","S2","S3","S4","S5","S6"];
+    var tmplDescs = {};
+    tmplKeys.forEach(function(k) { tmplDescs[k] = allTemplates[k] ? allTemplates[k].name : k });
+
+    h += '<div class="fld"><label>Template de Story (' + tmplKeys.length + ' disponíveis)</label>';
     h += '<div class="ov-row">';
-    h += '<div class="ov-sel">';
-    ["S1","S2","S3","S4","S5","S6"].forEach(function(t) {
+    h += '<div class="ov-sel" style="flex-wrap:wrap">';
+    tmplKeys.forEach(function(t) {
       var active = tmpl === t ? " on" : "";
       var col = active ? "color:" + (pal.primary || "#FA5701") + ";border-color:" + (pal.primary || "#FA5701") : "";
-      h += '<div class="ov-opt' + active + '" data-s="' + s.num + '" data-tmpl="' + t + '" title="' + tmplDescs[t] + '" style="' + col + '">' + t + '</div>';
+      var title = tmplDescs[t] + (allTemplates[t] && allTemplates[t].desc ? " — " + allTemplates[t].desc : "");
+      h += '<div class="ov-opt' + active + '" data-s="' + s.num + '" data-tmpl="' + t + '" title="' + title + '" style="' + col + '">' + t + '</div>';
     });
     h += '</div>';
 
     // Intensity sliders — S6 tem 2 (superior + inferior), outros 1
-    if (tmpl === "S6") {
+    if (tmpl === "S6" || tmpl === "S7" || tmpl === "S14" || tmpl === "S15") {
       var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
       h += '</div>'; // fecha ov-row
       h += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">';
@@ -492,11 +837,6 @@ function render() {
 
     h += '</div>'; // fld
 
-    // CTA swipe-up toggle
-    h += '<div class="cta-toggle">';
-    h += '<input type="checkbox" class="ctachk" data-s="' + s.num + '" id="cta-' + s.num + '"' + (s.showCta ? " checked" : "") + '>';
-    h += '<label for="cta-' + s.num + '">Barra "Arraste" no fundo</label>';
-    h += '</div>';
 
     // Image info (S6 sem foto = fallback gradiente brand automático)
     var img = getImageThumb(s.num);
@@ -521,27 +861,40 @@ function render() {
   document.getElementById("app").innerHTML = h;
 
   // Texto → live preview
-  document.querySelectorAll(".eh, .eb, .ep, .ec").forEach(function(el) {
+  document.querySelectorAll(".eh, .eb, .ep, .ec, .es, .epo, .epn").forEach(function(el) {
     el.addEventListener("input", function() {
       var sn = parseInt(this.dataset.s);
       var s = S.find(function(x) { return x.num === sn });
       if (!s) return;
-      var hi = document.querySelector('.eh[data-s="' + sn + '"]');
-      var bi = document.querySelector('.eb[data-s="' + sn + '"]');
-      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
-      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
       var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
+      if (prev) prev.innerHTML = renderPreviewForSlide(s) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
     });
   });
 
-  // Template selector
+  // Template selector — save field values before switching
   document.querySelectorAll(".ov-opt").forEach(function(el) {
     el.addEventListener("click", function() {
       var sn = parseInt(this.dataset.s);
       var s = S.find(function(x) { return x.num === sn });
       if (!s) return;
+      // Persist current field values into the slide object
+      saveSlideFields(sn);
       s.storyTemplate = this.dataset.tmpl;
+      render();
+    });
+  });
+
+  // Font scale buttons
+  document.querySelectorAll(".fs-minus, .fs-plus").forEach(function(el) {
+    el.addEventListener("click", function() {
+      var sn = parseInt(this.dataset.s);
+      var fk = this.dataset.fk;
+      var s = S.find(function(x) { return x.num === sn });
+      if (!s) return;
+      saveAllFields();
+      var cur = s.fontScale[fk] || 1;
+      var delta = this.classList.contains("fs-plus") ? 0.1 : -0.1;
+      s.fontScale[fk] = Math.max(0.5, Math.min(2.0, Math.round((cur + delta) * 10) / 10));
       render();
     });
   });
@@ -556,12 +909,8 @@ function render() {
       s.overlayIntensity = val;
       var valSpan = this.parentElement.querySelector(".ov-val");
       if (valSpan) valSpan.textContent = val + "%";
-      var hi = document.querySelector('.eh[data-s="' + sn + '"]');
-      var bi = document.querySelector('.eb[data-s="' + sn + '"]');
-      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
-      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
       var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
+      if (prev) prev.innerHTML = renderPreviewForSlide(s) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
     });
   });
 
@@ -575,30 +924,11 @@ function render() {
       s.overlayTopIntensity = val;
       var valSpan = this.parentElement.querySelector(".ov-val");
       if (valSpan) valSpan.textContent = val + "%";
-      var hi = document.querySelector('.eh[data-s="' + sn + '"]');
-      var bi = document.querySelector('.eb[data-s="' + sn + '"]');
-      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
-      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
       var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
+      if (prev) prev.innerHTML = renderPreviewForSlide(s) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
     });
   });
 
-  // CTA bar toggle
-  document.querySelectorAll(".ctachk").forEach(function(el) {
-    el.addEventListener("change", function() {
-      var sn = parseInt(this.dataset.s);
-      var s = S.find(function(x) { return x.num === sn });
-      if (!s) return;
-      s.showCta = this.checked;
-      var hi = document.querySelector('.eh[data-s="' + sn + '"]');
-      var bi = document.querySelector('.eb[data-s="' + sn + '"]');
-      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
-      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
-      var prev = document.getElementById("prev-" + sn);
-      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
-    });
-  });
 
   // Image buttons
   document.querySelectorAll(".img-btn").forEach(function(el) {
@@ -609,6 +939,7 @@ function render() {
         asl = sn;
         openModal();
       } else if (action === "remove") {
+        saveAllFields();
         delete sel[sn];
         render();
       }
@@ -620,7 +951,12 @@ function render() {
 
 // ─── Modal ───
 
+function saveAllFields() {
+  S.forEach(function(s) { saveSlideFields(s.num); });
+}
+
 function openModal() {
+  saveAllFields();
   document.getElementById("ov").style.display = "block";
   document.getElementById("modal").style.display = "flex";
   document.getElementById("mtitle").textContent = "Buscar no Drive — Story " + asl + " (" + G.length + " fotos)";
@@ -721,22 +1057,25 @@ function upStat() {
 document.getElementById("cbtn").addEventListener("click", function() {
   var l = [(DS.projectName || META.project) + " — " + (META.theme || "Stories"), ""];
   S.forEach(function(s) {
-    var hi = document.querySelector('.eh[data-s="' + s.num + '"]');
-    var bi = document.querySelector('.eb[data-s="' + s.num + '"]');
-    var pi = document.querySelector('.ep[data-s="' + s.num + '"]');
-    var ci = document.querySelector('.ec[data-s="' + s.num + '"]');
+    var f = getSlideFields(s.num);
     l.push("Story " + s.num + " [" + s.type + "]");
-    if (pi && pi.value) l.push("  Pretitle: " + pi.value);
-    l.push("  Headline: " + (hi ? hi.value : s.headline));
-    l.push("  Body: " + (bi ? bi.value : s.body));
+    if (f.pretitle) l.push("  Pretitle: " + f.pretitle);
+    l.push("  Headline: " + f.headline);
+    if (f.subtitle) l.push("  Subtitle: " + f.subtitle);
+    l.push("  Body: " + f.body);
+    if (f.price_old) l.push("  Preço antigo: " + f.price_old);
+    if (f.price_new) l.push("  Preço novo: " + f.price_new);
     if (s.storyTemplate === "S6") {
       l.push("  Template: S6 — ov.sup " + (s.overlayTopIntensity || 55) + "% · ov.inf " + (s.overlayIntensity || 72) + "%");
     } else {
       l.push("  Template: " + (s.storyTemplate || "S1") + " — intensidade " + (s.overlayIntensity || 72) + "%");
     }
+    var fsKeys = Object.keys(s.fontScale || {}).filter(function(k) { return s.fontScale[k] !== 1; });
+    if (fsKeys.length) {
+      l.push("  FontScale: " + fsKeys.map(function(k) { return k + " " + Math.round(s.fontScale[k] * 100) + "%"; }).join(", "));
+    }
     if (s.showLogo) l.push("  Logo: sim");
-    if (s.showCta)  l.push("  Barra CTA: sim");
-    if (ci && ci.value) l.push("  CTA: " + ci.value);
+    if (f.cta) l.push("  CTA: " + f.cta);
     else if (s.cta) l.push("  CTA: " + s.cta);
     if (sel[s.num]) {
       var img = getImageThumb(s.num);
