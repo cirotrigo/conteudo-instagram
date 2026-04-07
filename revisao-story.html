@@ -20,8 +20,8 @@ h1{text-align:center;margin-bottom:6px;font-size:22px}
 .slide-left{flex-shrink:0}
 .slide-right{flex:1;min-width:0}
 
-/* Preview 9:16 — 202×360px */
-.preview{width:202px;height:360px;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
+/* Preview 9:16 — 202×360 base, zoom 1.56 → visual 315×560px */
+.preview{width:202px;height:360px;zoom:1.56;border-radius:10px;overflow:hidden;position:relative;background:#000;flex-shrink:0}
 .preview-bg{position:absolute;inset:0;background-size:cover;background-position:center}
 .preview-ov{position:absolute;inset:0}
 .preview-content{position:absolute;inset:0;display:flex;flex-direction:column;padding:14px;z-index:2}
@@ -82,6 +82,9 @@ h1{text-align:center;margin-bottom:6px;font-size:22px}
 /* Safety zone note */
 .safe-note{font-size:10px;color:#444;margin-top:8px;font-style:italic}
 .safe-note span{color:#666}
+
+/* S3 list markers — accent color */
+.preview ul li::marker{color:var(--story-accent,#FA5701)}
 
 /* Modal */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200}
@@ -153,20 +156,29 @@ S.forEach(function(s) {
   if (s.selectedImage && s.selectedImage.id) sel[s.num] = s.selectedImage.id;
   if (s.overlayIntensity === undefined) s.overlayIntensity = 72;
   if (s.showCta === undefined) s.showCta = (s.type === "CTA" || s.type === "PROMO");
+  if (!s.storyTemplate) {
+    var tmplMap = { bottom:"S1", left:"S2", top:"S3", right:"S4", gradientBrand:"S6" };
+    s.storyTemplate = tmplMap[s.overlay] || "S1";
+  }
+  if (s.overlayTopIntensity === undefined) s.overlayTopIntensity = 55;
 });
 
 // Inject custom fonts
+function fontFormat(b64) {
+  if (b64.indexOf("/otf") > -1 || b64.indexOf("opentype") > -1) return "opentype";
+  if (b64.indexOf("/woff2") > -1) return "woff2";
+  if (b64.indexOf("/woff;") > -1) return "woff";
+  return "truetype";
+}
 (function injectFonts() {
   if (!DS || !DS.typography) return;
   var st = document.createElement("style");
   var css = "";
   if (DS.typography.headingB64) {
-    var fmt = DS.typography.headingB64.indexOf("opentype") > -1 ? "opentype" : "truetype";
-    css += "@font-face{font-family:'" + DS.typography.headingFont + "';src:url('" + DS.typography.headingB64 + "') format('" + fmt + "')}\n";
+    css += "@font-face{font-family:'" + DS.typography.headingFont + "';src:url('" + DS.typography.headingB64 + "') format('" + fontFormat(DS.typography.headingB64) + "')}\n";
   }
   if (DS.typography.bodyB64) {
-    var fmt2 = DS.typography.bodyB64.indexOf("opentype") > -1 ? "opentype" : "truetype";
-    css += "@font-face{font-family:'" + DS.typography.bodyFont + "';src:url('" + DS.typography.bodyB64 + "') format('" + fmt2 + "')}\n";
+    css += "@font-face{font-family:'" + DS.typography.bodyFont + "';src:url('" + DS.typography.bodyB64 + "') format('" + fontFormat(DS.typography.bodyB64) + "')}\n";
   }
   st.textContent = css;
   document.head.appendChild(st);
@@ -208,92 +220,199 @@ function getImageThumb(slideNum) {
 }
 
 function renderPreview(s, headline, body, pretitle, cta) {
-  var isGrad = s.overlay === "gradientBrand";
-  var isTop  = s.overlay === "top";
-  var isLeft = s.overlay === "left";
-  var isRight = s.overlay === "right";
-  var pal = DS.palette || {};
+  var pal  = DS.palette    || {};
   var typo = DS.typography || {};
+  var primary      = pal.primary      || "#FA5701";
+  var primaryDark  = pal.primaryDark  || "#612100";
+  var primaryLight = pal.primaryLight || "#fe9862";
+  var textLight    = pal.textLight    || "#fff";
+  var hFont = "'" + (typo.headingFont || "sans-serif") + "',sans-serif";
+  var bFont = "'" + (typo.bodyFont    || "sans-serif") + "',sans-serif";
   var intensity = s.overlayIntensity !== undefined ? s.overlayIntensity : 72;
+  var template  = s.storyTemplate || "S1";
+  var img       = getImageThumb(s.num);
+
+  var a1 = (intensity / 100).toFixed(2);
+  var a2 = (intensity * 0.65 / 100).toFixed(2);
 
   // Background
-  var bgCSS = "";
-  var img = getImageThumb(s.num);
-  if (isGrad) {
-    bgCSS = "background:" + (DS.overlays && DS.overlays.gradientBrand
-      ? DS.overlays.gradientBrand
-      : "linear-gradient(165deg,#612100,#FA5701,#fe9862)");
-  } else if (img) {
-    bgCSS = "background:url('" + img.thumb + "') center/cover no-repeat";
-  } else {
-    bgCSS = "background:#222";
-  }
+  var isGradBg = (template === "S6" && !img);
+  var bgStyle  = isGradBg
+    ? "background:" + (DS.overlays && DS.overlays.gradientBrand ? DS.overlays.gradientBrand : "linear-gradient(165deg," + primaryDark + "," + primary + "," + primaryLight + ")")
+    : img ? "background:url('" + img.thumb + "') center/cover no-repeat" : "background:#222";
 
-  // Overlay
-  var ovHTML = "";
-  if (!isGrad) {
-    var grad = buildOverlayGrad(s.overlay, intensity);
-    if (grad) ovHTML = '<div class="preview-ov" style="background:' + grad + '"></div>';
-  }
+  var logo = s.showLogo && DS.logoB64
+    ? '<img style="height:16px;width:auto;max-width:55%;object-fit:contain;opacity:.92;flex-shrink:0" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">'
+    : '';
 
-  // Text positioning
-  var justify  = isGrad ? "center" : (isTop ? "flex-start" : "flex-end");
-  var align    = isGrad ? "center" : "flex-start";
-  var textAlign = isGrad ? "center" : "left";
-  var pad = isTop ? "18px 14px 14px" : "14px 14px 18px";
-  var textWidth = (isLeft || isRight) ? "55%" : "100%";
-  if (isLeft)  { align = "flex-start"; justify = "center"; }
-  if (isRight) { align = "flex-end";   justify = "center"; }
-
-  // Story uses slightly larger text than carousel (taller canvas)
-  var hSize = isGrad ? "14px" : "13px";
-  var bSize = "6.5px";
-
-  var lines = (headline || "").split("\n");
-  var titleHTML = lines.map(function(l) { return "<div>" + esc(l) + "</div>" }).join("");
-  var bodyLines = (body || "").split("\n");
-  var bodyHTML = bodyLines.filter(function(l) { return l }).map(function(l) { return "<div>" + esc(l) + "</div>" }).join("");
-
-  var logoHTML = "";
-  if (s.showLogo && DS.logoB64) {
-    logoHTML = '<img class="preview-logo" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">';
-  }
-
-  var ctaBtnHTML = "";
-  if (cta && isGrad) {
-    ctaBtnHTML = '<div class="preview-cta-btn" style="background:#fff;color:' + (pal.primary || "#FA5701") + ';font-family:\'' + (typo.headingFont || "sans-serif") + '\'">' + esc(cta) + '</div>';
-  }
-
-  // Swipe-up CTA bar (story-specific)
+  // Swipe-up CTA bar
   var ctaBarHTML = "";
   if (s.showCta) {
-    var ctaLabel = cta && !isGrad ? esc(cta) : "Ver mais";
-    ctaBarHTML = '<div class="preview-cta-area" style="font-family:\'' + (typo.bodyFont || "sans-serif") + '\';color:#fff">';
-    ctaBarHTML += '<svg fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
-    ctaBarHTML += '<span>' + ctaLabel.toUpperCase() + '</span>';
-    ctaBarHTML += '</div>';
+    var ctaLabel = cta || "Ver mais";
+    ctaBarHTML = '<div class="preview-cta-area" style="font-family:' + bFont + ';color:#fff">'
+      + '<svg fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
+      + '<span style="font-size:6.5px;letter-spacing:.5px">' + esc(ctaLabel).toUpperCase() + '</span>'
+      + '</div>';
   }
 
-  var h = '<div class="preview">';
-  h += '<div class="preview-bg" style="' + bgCSS + '"></div>';
-  h += ovHTML;
-  h += '<div class="preview-safe-top" title="Zona segura — 15%"></div>';
-  h += '<div class="preview-safe-bot" title="Zona segura — 85%"></div>';
-  h += '<div class="preview-content" style="justify-content:' + justify + ';align-items:' + align + ';text-align:' + textAlign + ';padding:' + pad + '">';
-  h += '<div style="width:' + textWidth + '">';
-  h += logoHTML;
-  if (pretitle) {
-    h += '<div class="preview-pretitle" style="font-family:\'' + (typo.bodyFont || "sans-serif") + '\';color:' + (pal.primary || "#FA5701") + '">' + esc(pretitle) + '</div>';
+  // Safe zone guides
+  var safeGuides = '<div class="preview-safe-top" title="Zona segura — 15%"></div>'
+                 + '<div class="preview-safe-bot" title="Zona segura — 85%"></div>';
+
+  // Safe content padding: igual DS .story-container .safe-zone { padding: 15% 8% 18% 8% }
+  // CSS padding-% é relativo à LARGURA do container, não à altura
+  var safeP = "padding:15% 8% 18%";
+
+  var inner = "";
+
+  // ─── S1: Centered Focus ───
+  // overlay-bottom, logo top-center, text center-bottom
+  if (template === "S1") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:55%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;text-align:center">';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:5px;letter-spacing:1.5px;text-transform:uppercase;color:' + primary + ';margin-bottom:2px">' + esc(pretitle) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:13px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:6px;line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    if (cta) inner += '<div style="font-family:' + bFont + ';font-size:5.5px;color:' + primary + ';font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:4px">' + esc(cta) + ' →</div>';
+    inner += '</div></div>';
   }
-  h += '<div class="preview-headline" style="font-family:\'' + (typo.headingFont || "sans-serif") + '\';font-size:' + hSize + ';color:' + (pal.textLight || "#fff") + '">' + titleHTML + '</div>';
-  if (bodyHTML) {
-    h += '<div class="preview-body" style="font-family:\'' + (typo.bodyFont || "sans-serif") + '\';font-size:' + bSize + ';color:rgba(255,255,255,.85)">' + bodyHTML + '</div>';
+
+  // ─── S2: Editorial Asymmetric ───
+  // overlay-left 50%, logo top-RIGHT, text confined to left 45%
+  else if (template === "S2") {
+    var ovGrad = "linear-gradient(to right,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 40%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';width:55%;height:100%;left:0;right:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    inner += '<div style="display:flex;justify-content:flex-end">' + logo + '</div>';
+    inner += '<div style="margin-top:auto;margin-bottom:8px;width:45%;max-width:45%">';
+    if (pretitle) inner += '<div style="font-family:' + bFont + ';font-size:5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:2px">' + esc(pretitle) + '</div>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.8);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+    inner += '</div></div>';
   }
-  h += ctaBtnHTML;
-  h += '</div></div>';
-  h += ctaBarHTML;
-  h += '</div>';
-  return h;
+
+  // ─── S3: Info / List ───
+  // overlay-bottom 55%, logo top-center, headline center, body → lista de itens
+  else if (template === "S3") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:60%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;width:100%">';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';text-align:center;margin-bottom:5px;white-space:pre-line">' + esc(headline) + '</div>';
+    var listItems = (body || "").split(/[\n·•]/).map(function(l){return l.trim()}).filter(Boolean);
+    if (listItems.length) {
+      inner += '<ul style="list-style:disc;padding-left:14px;margin:0">';
+      listItems.forEach(function(item) {
+        inner += '<li style="font-family:' + bFont + ';font-size:5.5px;color:#fff;margin-bottom:2px;line-height:1.3">' + esc(item) + '</li>';
+      });
+      inner += '</ul>';
+    } else if (body) {
+      inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.8);white-space:pre-line">' + esc(body) + '</div>';
+    }
+    inner += '</div></div>';
+  }
+
+  // ─── S4: Production Tip ───
+  // overlay-bottom 60%, logo top-center, badge (pretitle) + headline + body + outline CTA
+  else if (template === "S4") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:65%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;' + safeP + ';z-index:2">';
+    inner += logo;
+    inner += '<div style="margin-top:auto;text-align:center;margin-bottom:6px">';
+    if (pretitle) inner += '<div style="display:inline-block;margin-bottom:4px;font-family:' + bFont + ';font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + primary + ';color:#fff;padding:2px 7px;border-radius:99px">' + esc(pretitle) + '</div><br>';
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';margin:3px 0;white-space:pre-line">' + esc(headline) + '</div>';
+    if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.82);margin:4px 0 6px;white-space:pre-line">' + esc(body) + '</div>';
+    if (cta)      inner += '<div style="display:inline-block;font-family:' + bFont + ';font-size:5.5px;background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25)">' + esc(cta) + '</div>';
+    inner += '</div></div>';
+  }
+
+  // ─── S5: Production Setup ───
+  // overlay-bottom 55%, logo top-RIGHT, badge-accent (pretitle) + headline + info rows (body lines)
+  else if (template === "S5") {
+    var ovGrad = "linear-gradient(to top,rgba(0,0,0," + a1 + ") 0%,rgba(0,0,0," + a2 + ") 50%,rgba(0,0,0,0) 100%)";
+    inner += '<div class="preview-ov" style="background:' + ovGrad + ';height:60%;bottom:0;top:auto"></div>';
+    inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+    inner += '<div style="display:flex;justify-content:flex-end">' + logo + '</div>';
+    inner += '<div style="margin-top:auto;margin-bottom:6px">';
+    if (pretitle) {
+      inner += '<div style="display:inline-flex;align-items:center;gap:3px;margin-bottom:4px;font-family:' + bFont + ';font-size:5px;background:rgba(250,87,1,.15);color:' + primary + ';padding:2px 7px;border-radius:99px;border:1px solid rgba(250,87,1,.3)">';
+      inner += '<span style="width:4px;height:4px;border-radius:50%;background:' + primary + ';display:inline-block;flex-shrink:0"></span>' + esc(pretitle) + '</div><br>';
+    }
+    if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';margin:2px 0 4px;white-space:pre-line">' + esc(headline) + '</div>';
+    var rows = (body || "").split(/[\n·•]/).map(function(l){return l.trim()}).filter(Boolean);
+    rows.forEach(function(row) {
+      inner += '<div style="display:flex;align-items:center;gap:3px;font-family:' + bFont + ';font-size:5px;color:#d4d4d8;margin-top:2px">';
+      inner += '<svg style="width:7px;height:7px;color:' + primary + ';flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+      inner += esc(row) + '</div>';
+    });
+    inner += '</div></div>';
+  }
+
+  // ─── S6: Final Result / Promo ───
+  // Com foto: overlay top 35% + bottom 40%, badge (pretitle) + logo top, headline + CTA center-bottom
+  // Sem foto: gradiente brand, texto centralizado + botão CTA
+  // ─── S6: Final Result / Promo ───
+  // Estrutura DS: ig-badge (pretitle) + logo em flex-row no TOPO
+  //              headline + ig-badge-outline CTA em margin-top:auto (FUNDO)
+  // Gradient brand (sem foto): badge = white bg + primaryDark text
+  // Com foto: dual overlay top35%+bottom40%, badge = primary bg + white text
+  else if (template === "S6") {
+    // Badge (pretitle pill)
+    var s6BadgeStyle = isGradBg
+      ? "font-family:" + bFont + ";font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:#fff;color:" + (pal.primaryDark || "#612100") + ";padding:2px 7px;border-radius:99px"
+      : "font-family:" + bFont + ";font-size:5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:" + primary + ";color:#fff;padding:2px 7px;border-radius:99px";
+    // Logo
+    var s6LogoHTML = s.showLogo && DS.logoB64
+      ? '<img style="height:' + (isGradBg ? "13px" : "11px") + ';width:auto;object-fit:contain;opacity:.92;flex-shrink:0" src="' + DS.logoB64 + '" referrerpolicy="no-referrer">'
+      : "";
+    // Header row: badge + logo (DS S6 exato)
+    var s6Header = '<div style="display:flex;justify-content:space-between;align-items:center;width:100%">'
+      + (pretitle ? '<span style="' + s6BadgeStyle + '">' + esc(pretitle) + '</span>' : '<div></div>')
+      + s6LogoHTML
+      + '</div>';
+    // CTA: ig-badge-outline (DS exato: rgba(0,0,0,.4) + border rgba branca)
+    var s6Cta = cta
+      ? '<div style="display:inline-block;font-family:' + bFont + ';font-size:5.5px;font-weight:500;background:rgba(0,0,0,.4);color:#fff;padding:3px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(4px);margin-top:5px">' + esc(cta) + '</div>'
+      : "";
+
+    if (isGradBg) {
+      // Sem foto → gradiente brand (fallback automático)
+      inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+      inner += s6Header;
+      inner += '<div style="margin-top:auto;text-align:center">';
+      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:13px;line-height:1.0;color:#fff;white-space:pre-line">' + esc(headline) + '</div>';
+      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.85);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+      inner += s6Cta + '</div></div>';
+    } else {
+      // Com foto → dual overlay (top + bottom com intensidades independentes)
+      var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
+      var botI = intensity;
+      var a1t = (topI / 100).toFixed(2);
+      var a2t = (topI * 0.5 / 100).toFixed(2);
+      var a1b = (botI / 100).toFixed(2);
+      var a2b = (botI * 0.5 / 100).toFixed(2);
+      inner += '<div class="preview-ov" style="background:linear-gradient(to bottom,rgba(0,0,0,' + a1t + ') 0%,rgba(0,0,0,' + a2t + ') 50%,rgba(0,0,0,0) 100%);height:35%;top:0;bottom:auto"></div>';
+      inner += '<div class="preview-ov" style="background:linear-gradient(to top,rgba(0,0,0,' + a1b + ') 0%,rgba(0,0,0,' + a2b + ') 50%,rgba(0,0,0,0) 100%);height:42%;bottom:0;top:auto"></div>';
+      inner += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' + safeP + ';z-index:2">';
+      inner += s6Header;
+      inner += '<div style="margin-top:auto;text-align:center">';
+      if (headline) inner += '<div style="font-family:' + hFont + ';font-size:11px;line-height:1.0;color:' + textLight + ';white-space:pre-line">' + esc(headline) + '</div>';
+      if (body)     inner += '<div style="font-family:' + bFont + ';font-size:5.5px;line-height:1.3;color:rgba(255,255,255,.82);margin-top:3px;white-space:pre-line">' + esc(body) + '</div>';
+      inner += s6Cta + '</div></div>';
+    }
+  }
+
+  return '<div class="preview">'
+    + '<div class="preview-bg" style="' + bgStyle + '"></div>'
+    + inner
+    + safeGuides
+    + ctaBarHTML
+    + '</div>';
 }
 
 // Type badge colors
@@ -308,7 +427,7 @@ function render() {
     var tc = typeColor(s.type);
     var pal = DS.palette || {};
     var intensity = s.overlayIntensity !== undefined ? s.overlayIntensity : 72;
-    var isGrad = s.overlay === "gradientBrand";
+    var tmpl = s.storyTemplate || "S1";
 
     h += '<div class="sec" id="sec-' + s.num + '">';
     h += '<div class="sh"><div class="sn" style="background:' + tc + '">' + s.num + '</div><span class="sb" style="background:' + tc + '">' + s.type + '</span></div>';
@@ -335,21 +454,35 @@ function render() {
     h += '<input class="ec" data-s="' + s.num + '" value="' + esc(s.cta || "") + '" placeholder="Texto do botão ou barra...">';
     h += '</div>';
 
-    // Overlay type + intensity
-    h += '<div class="fld"><label>Overlay</label>';
+    // Template selector S1-S6
+    var tmplDescs = { S1:"Centralizado", S2:"Assimétrico", S3:"Lista", S4:"Destaque", S5:"Setup", S6:"Promo" };
+    h += '<div class="fld"><label>Template de Story</label>';
     h += '<div class="ov-row">';
     h += '<div class="ov-sel">';
-    var ovs = ["bottom","top","left","right","gradientBrand"];
-    var ovLabels = { bottom:"Bottom", top:"Top", left:"Left", right:"Right", gradientBrand:"Brand" };
-    ovs.forEach(function(ov) {
-      var active = s.overlay === ov ? " on" : "";
-      var col = ov === "gradientBrand" ? "color:" + (pal.primary || "#FA5701") : "";
-      h += '<div class="ov-opt' + active + '" data-s="' + s.num + '" data-ov="' + ov + '" style="' + col + '">' + ovLabels[ov] + '</div>';
+    ["S1","S2","S3","S4","S5","S6"].forEach(function(t) {
+      var active = tmpl === t ? " on" : "";
+      var col = active ? "color:" + (pal.primary || "#FA5701") + ";border-color:" + (pal.primary || "#FA5701") : "";
+      h += '<div class="ov-opt' + active + '" data-s="' + s.num + '" data-tmpl="' + t + '" title="' + tmplDescs[t] + '" style="' + col + '">' + t + '</div>';
     });
     h += '</div>';
 
-    // Intensity slider (hidden for gradientBrand)
-    if (!isGrad) {
+    // Intensity sliders — S6 tem 2 (superior + inferior), outros 1
+    if (tmpl === "S6") {
+      var topI = s.overlayTopIntensity !== undefined ? s.overlayTopIntensity : 55;
+      h += '</div>'; // fecha ov-row
+      h += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">';
+      h += '<div class="ov-intensity">';
+      h += '<label>Ov. Superior</label>';
+      h += '<input type="range" class="oi-top" data-s="' + s.num + '" min="0" max="100" value="' + topI + '">';
+      h += '<span class="ov-val">' + topI + '%</span>';
+      h += '</div>';
+      h += '<div class="ov-intensity">';
+      h += '<label>Ov. Inferior</label>';
+      h += '<input type="range" class="oi" data-s="' + s.num + '" min="0" max="100" value="' + intensity + '">';
+      h += '<span class="ov-val">' + intensity + '%</span>';
+      h += '</div>';
+      h += '</div>';
+    } else {
       h += '<div class="ov-intensity">';
       h += '<label>Intensidade</label>';
       h += '<input type="range" class="oi" data-s="' + s.num + '" min="20" max="100" value="' + intensity + '">';
@@ -357,7 +490,7 @@ function render() {
       h += '</div>';
     }
 
-    h += '</div></div>'; // ov-row, fld
+    h += '</div>'; // fld
 
     // CTA swipe-up toggle
     h += '<div class="cta-toggle">';
@@ -365,12 +498,9 @@ function render() {
     h += '<label for="cta-' + s.num + '">Barra "Arraste" no fundo</label>';
     h += '</div>';
 
-    // Image info
+    // Image info (S6 sem foto = fallback gradiente brand automático)
     var img = getImageThumb(s.num);
-    if (isGrad && !img) {
-      h += '<div class="no-img">Fundo gradiente da marca + logo</div>';
-      h += '<div class="img-btns"><div class="img-btn" data-s="' + s.num + '" data-action="drive">📁 Buscar no Drive (opcional)</div></div>';
-    } else if (img) {
+    if (img) {
       h += '<div class="img-info">';
       h += '<img src="' + img.thumb + '" referrerpolicy="no-referrer" loading="lazy">';
       h += '<div class="img-info-text"><div class="img-info-name">' + esc(img.name || "Imagem selecionada") + '</div>';
@@ -381,7 +511,7 @@ function render() {
       h += '<div class="img-btn img-btn-remove" data-s="' + s.num + '" data-action="remove">✕ Remover</div>';
       h += '</div>';
     } else {
-      h += '<div class="no-img">Nenhuma imagem selecionada</div>';
+      h += '<div class="no-img">' + (tmpl === "S6" ? "Sem foto → gradiente da marca (ou escolha uma foto abaixo)" : "Nenhuma imagem selecionada") + '</div>';
       h += '<div class="img-btns"><div class="img-btn" data-s="' + s.num + '" data-action="drive">📁 Buscar no Drive</div></div>';
     }
 
@@ -405,18 +535,18 @@ function render() {
     });
   });
 
-  // Overlay type
+  // Template selector
   document.querySelectorAll(".ov-opt").forEach(function(el) {
     el.addEventListener("click", function() {
       var sn = parseInt(this.dataset.s);
       var s = S.find(function(x) { return x.num === sn });
       if (!s) return;
-      s.overlay = this.dataset.ov;
+      s.storyTemplate = this.dataset.tmpl;
       render();
     });
   });
 
-  // Overlay intensity
+  // Overlay intensity (bottom / geral)
   document.querySelectorAll(".oi").forEach(function(el) {
     el.addEventListener("input", function() {
       var sn = parseInt(this.dataset.s);
@@ -424,6 +554,25 @@ function render() {
       var s = S.find(function(x) { return x.num === sn });
       if (!s) return;
       s.overlayIntensity = val;
+      var valSpan = this.parentElement.querySelector(".ov-val");
+      if (valSpan) valSpan.textContent = val + "%";
+      var hi = document.querySelector('.eh[data-s="' + sn + '"]');
+      var bi = document.querySelector('.eb[data-s="' + sn + '"]');
+      var pi = document.querySelector('.ep[data-s="' + sn + '"]');
+      var ci = document.querySelector('.ec[data-s="' + sn + '"]');
+      var prev = document.getElementById("prev-" + sn);
+      if (prev) prev.innerHTML = renderPreview(s, hi ? hi.value : s.headline, bi ? bi.value : s.body, pi ? pi.value : s.pretitle, ci ? ci.value : s.cta) + '<p class="safe-note">— <span>linhas amarelas</span> = zona segura (15%/85%)</p>';
+    });
+  });
+
+  // Overlay intensity top (S6 only)
+  document.querySelectorAll(".oi-top").forEach(function(el) {
+    el.addEventListener("input", function() {
+      var sn = parseInt(this.dataset.s);
+      var val = parseInt(this.value);
+      var s = S.find(function(x) { return x.num === sn });
+      if (!s) return;
+      s.overlayTopIntensity = val;
       var valSpan = this.parentElement.querySelector(".ov-val");
       if (valSpan) valSpan.textContent = val + "%";
       var hi = document.querySelector('.eh[data-s="' + sn + '"]');
@@ -560,7 +709,7 @@ document.getElementById("ov").addEventListener("click", closeModal);
 function upStat() {
   var total = S.length, done = 0;
   S.forEach(function(s) {
-    if (sel[s.num] || s.overlay === "gradientBrand") done++;
+    if (sel[s.num]) done++;
   });
   var e = document.getElementById("stat");
   e.textContent = done === total ? "Tudo pronto! Clique para copiar." : done + " de " + total + " stories prontos";
@@ -580,8 +729,11 @@ document.getElementById("cbtn").addEventListener("click", function() {
     if (pi && pi.value) l.push("  Pretitle: " + pi.value);
     l.push("  Headline: " + (hi ? hi.value : s.headline));
     l.push("  Body: " + (bi ? bi.value : s.body));
-    l.push("  Overlay: " + (s.overlay || "bottom") + (s.overlay !== "gradientBrand" ? " (" + (s.overlayIntensity || 72) + "%)" : ""));
-    if (s.pretitle) l.push("  Pretitle: " + s.pretitle);
+    if (s.storyTemplate === "S6") {
+      l.push("  Template: S6 — ov.sup " + (s.overlayTopIntensity || 55) + "% · ov.inf " + (s.overlayIntensity || 72) + "%");
+    } else {
+      l.push("  Template: " + (s.storyTemplate || "S1") + " — intensidade " + (s.overlayIntensity || 72) + "%");
+    }
     if (s.showLogo) l.push("  Logo: sim");
     if (s.showCta)  l.push("  Barra CTA: sim");
     if (ci && ci.value) l.push("  CTA: " + ci.value);
@@ -589,8 +741,8 @@ document.getElementById("cbtn").addEventListener("click", function() {
     if (sel[s.num]) {
       var img = getImageThumb(s.num);
       l.push("  Imagem: " + (img ? img.name : "?") + " | " + sel[s.num]);
-    } else if (s.overlay === "gradientBrand") {
-      l.push("  Imagem: sem foto (gradiente brand)");
+    } else if (s.storyTemplate === "S6" && !sel[s.num]) {
+      l.push("  Imagem: sem foto (S6 gradiente brand)");
     } else {
       l.push("  Imagem: NENHUMA");
     }

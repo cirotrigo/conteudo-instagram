@@ -139,17 +139,21 @@ S.forEach(function(s) {
 });
 
 // Inject custom fonts from design system
+function fontFormat(b64) {
+  if (b64.indexOf("/otf") > -1 || b64.indexOf("opentype") > -1) return "opentype";
+  if (b64.indexOf("/woff2") > -1) return "woff2";
+  if (b64.indexOf("/woff;") > -1) return "woff";
+  return "truetype";
+}
 (function injectFonts() {
   if (!DS || !DS.typography) return;
   var st = document.createElement("style");
   var css = "";
   if (DS.typography.headingB64) {
-    var fmt = DS.typography.headingB64.indexOf("opentype") > -1 ? "opentype" : "truetype";
-    css += "@font-face{font-family:'" + DS.typography.headingFont + "';src:url('" + DS.typography.headingB64 + "') format('" + fmt + "')}\n";
+    css += "@font-face{font-family:'" + DS.typography.headingFont + "';src:url('" + DS.typography.headingB64 + "') format('" + fontFormat(DS.typography.headingB64) + "')}\n";
   }
   if (DS.typography.bodyB64) {
-    var fmt2 = DS.typography.bodyB64.indexOf("opentype") > -1 ? "opentype" : "truetype";
-    css += "@font-face{font-family:'" + DS.typography.bodyFont + "';src:url('" + DS.typography.bodyB64 + "') format('" + fmt2 + "')}\n";
+    css += "@font-face{font-family:'" + DS.typography.bodyFont + "';src:url('" + DS.typography.bodyB64 + "') format('" + fontFormat(DS.typography.bodyB64) + "')}\n";
   }
   st.textContent = css;
   document.head.appendChild(st);
