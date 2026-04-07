@@ -1,0 +1,126 @@
+{
+  "projectId": 6,
+  "projectSlug": "espeto-gaucho",
+  "palette": {
+    "primary": "#F4301A",
+    "primaryLight": "#F98174",
+    "primaryDark": "#A11608",
+    "lightBg": "#FFF8F7",
+    "darkBg": "#1A0A08",
+    "textLight": "#FFFFFF",
+    "textDark": "#1A0A08"
+  },
+  "typography": {
+    "headingFont": "Coolvetica Hv Comp",
+    "bodyFont": "Coolvetica Rg",
+    "headingSizePx": 32,
+    "bodySizePx": 14,
+    "tagSizePx": 10
+  },
+  "overlays": {
+    "bottom": {
+      "position": "bottom", "height": "50%",
+      "gradient": "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "bottom-55": {
+      "position": "bottom", "height": "55%",
+      "gradient": "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "bottom-60": {
+      "position": "bottom", "height": "60%",
+      "gradient": "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "bottom-70": {
+      "position": "bottom", "height": "70%",
+      "gradient": "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "bottom-45": {
+      "position": "bottom", "height": "45%",
+      "gradient": "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "top": {
+      "position": "top", "height": "50%",
+      "gradient": "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "top-60": {
+      "position": "top", "height": "60%",
+      "gradient": "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "left": {
+      "position": "left", "width": "60%",
+      "gradient": "linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "left-50": {
+      "position": "left", "width": "50%",
+      "gradient": "linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "left-55": {
+      "position": "left", "width": "55%",
+      "gradient": "linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "right": {
+      "position": "right", "width": "60%",
+      "gradient": "linear-gradient(to left, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "right-55": {
+      "position": "right", "width": "55%",
+      "gradient": "linear-gradient(to left, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)"
+    },
+    "top-bottom": {
+      "position": "top-bottom",
+      "topHeight": "35%", "bottomHeight": "40%",
+      "topGradient": "linear-gradient(to bottom, rgba(16,8,6,0.95), transparent)",
+      "bottomGradient": "linear-gradient(to top, rgba(16,8,6,0.95) 30%, transparent)"
+    },
+    "gradientBrand": {
+      "position": "full",
+      "gradient": "linear-gradient(165deg, #A11608 0%, #F4301A 50%, #F98174 100%)"
+    }
+  },
+  "storyTemplates": {
+    "S1": {"name": "Centered Focus", "overlay": "bottom", "textAlign": "center-bottom", "desc": "overlay bottom, texto centralizado embaixo"},
+    "S2": {"name": "Editorial Asymmetric", "overlay": "left-50", "textAlign": "center-left", "desc": "overlay left 50%, texto confinado ao overlay"},
+    "S3": {"name": "Info / List", "overlay": "bottom-55", "textAlign": "bottom-left", "desc": "overlay bottom 55%, lista de itens", "hasList": true},
+    "S4": {"name": "Production Tip", "overlay": "bottom-60", "textAlign": "center-bottom", "desc": "overlay bottom 60%, badge + CTA outline", "hasBadge": true, "hasCta": true},
+    "S5": {"name": "Production Setup", "overlay": "bottom-55", "textAlign": "bottom-left", "desc": "overlay bottom 55%, badge accent + info rows", "hasBadge": true},
+    "S6": {"name": "Final Result", "overlay": "top-bottom", "textAlign": "center-bottom", "desc": "overlay top 35% + bottom 40%, badge + CTA", "hasBadge": true, "hasCta": true},
+    "S7": {"name": "Testimonial", "overlay": "top-bottom", "textAlign": "center", "desc": "overlay top+bottom, citação central"},
+    "S8": {"name": "Highlight Product", "overlay": "left", "textAlign": "center-left", "desc": "overlay left 60%, preço em destaque", "hasPrice": true},
+    "S9": {"name": "Weekly Schedule", "overlay": "bottom-70", "textAlign": "bottom-left", "desc": "overlay bottom 70%, tabela elegante", "hasList": true},
+    "S10": {"name": "Oferta Explosiva", "overlay": "bottom-60", "textAlign": "center-bottom", "desc": "overlay bottom 60%, desconto agressivo", "hasPrice": true},
+    "S11": {"name": "Promo Topo", "overlay": "top", "textAlign": "top-right", "desc": "overlay gradiente 45%, alinhamento à direita", "hasPrice": true},
+    "S12": {"name": "Promo Lateral", "overlay": "left-50", "textAlign": "center-left", "desc": "overlay gradiente 50%, borda lateral esquerda", "hasPrice": true},
+    "S13": {"name": "Promo Card", "overlay": "bottom", "textAlign": "center", "desc": "card com glassmorphism, foco central", "hasPrice": true, "hasGlassCard": true},
+    "S14": {"name": "Infos Centro", "overlay": "top-bottom", "textAlign": "center", "desc": "overlays superior e inferior, endereço e horário centro"},
+    "S15": {"name": "Infos Lateral", "overlay": "top-bottom", "textAlign": "center-left", "desc": "overlays superior e inferior, texto deslocado"}
+  },
+  "feedTemplates": {
+    "F1": {"name": "Product / Promo", "ratio": "3:4", "overlay": "bottom", "textAlign": "bottom-left", "desc": "overlay bottom, preço destaque", "hasPrice": true},
+    "F2": {"name": "Lifestyle", "ratio": "4:5", "overlay": "left-50", "textAlign": "center-left", "desc": "overlay left 50%, texto poético"},
+    "F3": {"name": "Clean", "ratio": "1:1", "overlay": "none", "textAlign": "bottom-left", "desc": "sem overlay, tag discreta"},
+    "F4": {"name": "Promo", "ratio": "4:5", "overlay": "left", "textAlign": "center-left", "desc": "overlay left+bottom, foco produto + box preço", "hasPrice": true}
+  },
+  "carouselTemplates": {
+    "C1": {"name": "Hook", "overlay": "bottom", "textAlign": "bottom-left", "desc": "overlay bottom 50%, texto bottom"},
+    "C2": {"name": "Dev Topo", "overlay": "top", "textAlign": "top-left", "desc": "overlay top 50%, texto top-left"},
+    "C3": {"name": "Dev Esquerda", "overlay": "left-55", "textAlign": "center-left", "desc": "overlay left 55%, texto confinado ao overlay"},
+    "C4": {"name": "Dev Direita", "overlay": "right-55", "textAlign": "center-right", "desc": "overlay right 55%, sem seta (evita sobreposição)", "noSwipe": true},
+    "C5": {"name": "Dev Rodapé", "overlay": "bottom-45", "textAlign": "bottom-left", "desc": "overlay bottom 45%, texto bottom-left"},
+    "C6": {"name": "CTA", "overlay": "gradientBrand", "textAlign": "center", "desc": "bg gradient brand + foto topo 30%", "hasPhoto": false, "hasCtaButton": true},
+    "C7": {"name": "Dev Quote", "overlay": "top-60", "textAlign": "top-left", "desc": "overlay top 60%, citação marcante"},
+    "C8": {"name": "Dev Detail", "overlay": "left-55", "textAlign": "center-left", "desc": "overlay left 55%, badge + detalhe técnico", "hasBadge": true}
+  },
+  "layoutPresets": {
+    "standard": ["C1", "C2", "C3", "C4", "C5", "C6"],
+    "editorial": ["C1", "C3", "C5", "C4", "C7", "C6"],
+    "bold": ["C6", "C2", "C5", "C2", "C5", "C6"],
+    "promo": ["C1", "C8", "C3", "C4", "C5", "C6"]
+  },
+  "storyPresets": {
+    "essencial": ["S1", "S3", "S6"],
+    "promo": ["S10", "S8", "S13"],
+    "informativo": ["S14", "S3", "S9"],
+    "editorial": ["S2", "S5", "S6"],
+    "bold": ["S6", "S1", "S6"]
+  }
+}
